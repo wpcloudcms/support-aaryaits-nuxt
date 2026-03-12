@@ -5,9 +5,7 @@ const isAuthenticated = ref(false)
 const currentUser = ref<{ id: number; name: string; email: string } | null>(null)
 
 export function useAuth() {
-  const { setToken, wpFetch } = useWordPress() as ReturnType<typeof useWordPress> & {
-    wpFetch?: never
-  }
+  const { setToken } = useWordPress()
   const config = useRuntimeConfig()
 
   async function login(username: string, password: string) {
