@@ -35,14 +35,57 @@ export function useWordPress() {
   const getCustomer = (id: number) => wpFetch(`/wp-json/wp/v2/customer/${id}`)
   const createCustomer = (data: Record<string, unknown>) => wpFetch('/wp-json/wp/v2/customer', { method: 'POST', body: JSON.stringify(data) })
 
-  // WP Users (members/team)
-  const getUsers = () => wpFetch('/wp-json/wp/v2/users?per_page=100')
+  // Members (CPT: member)
+  const getMembers = () => wpFetch('/wp-json/wp/v2/member?per_page=100')
+  const createMember = (data: Record<string, unknown>) => wpFetch('/wp-json/wp/v2/member', { method: 'POST', body: JSON.stringify(data) })
+  const updateMember = (id: number, data: Record<string, unknown>) => wpFetch(`/wp-json/wp/v2/member/${id}`, { method: 'POST', body: JSON.stringify(data) })
+
+  // WP Users (for member dropdown)
+  const getUsers = () => wpFetch('/wp-json/wp/v2/users?per_page=100&context=edit')
+
+  // Ticket history — .md files in wp-content/uploads/tickets-history/
+  const getHistory = (id: number) =>
+    wpFetch<{ timestamp: string; iso: string; user: string; changes: string[] }[]>(`/wp-json/support/v1/history/${id}`)
+  const saveHistory = (id: number, data: { changes: string[]; user: string; ticketTitle: string }) =>
+    wpFetch<{ ok: boolean }>(`/wp-json/support/v1/history/${id}`, { method: 'POST', body: JSON.stringify(data) })
+
+  // Ticket comments — .md files in wp-content/uploads/tickets-comments/
+  const getComments = (id: number) =>
+    wpFetch<{ timestamp: string; iso: string; user: string; body: string }[]>(`/wp-json/support/v1/comments/${id}`)
+  const addComment = (id: number, data: { body: string; user: string; ticketTitle: string }) =>
+    wpFetch<{ ok: boolean }>(`/wp-json/support/v1/comments/${id}`, { method: 'POST', body: JSON.stringify(data) })
+
+  // Notifications — activity on tickets assigned to current user
+  const getNotifications = () =>
+    wpFetch<{
+      type: 'comment' | 'history'
+      ticket_id: number
+      ticket_title: string
+      user: string
+      timestamp: string
+      iso: string
+      body?: string
+      changes?: string[]
+    }[]>('/wp-json/support/v1/notifications')
+
+  // Web Push
+  const getVapidKey = () =>
+    wpFetch<{ key: string }>('/wp-json/support/v1/push/vapid-key').then(r => r.key)
+  const subscribePush = (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
+    wpFetch<{ ok: boolean }>('/wp-json/support/v1/push/subscribe', { method: 'POST', body: JSON.stringify(sub) })
+  const unsubscribePush = (endpoint: string) =>
+    wpFetch<{ ok: boolean }>('/wp-json/support/v1/push/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint }) })
 
   return {
     setToken,
     getTickets, getTicket, createTicket, updateTicket, deleteTicket,
     getProjects, getProject, createProject, updateProject,
     getCustomers, getCustomer, createCustomer,
+    getMembers, createMember, updateMember,
     getUsers,
+    getHistory, saveHistory,
+    getComments, addComment,
+    getNotifications,
+    getVapidKey, subscribePush, unsubscribePush,
   }
 }
