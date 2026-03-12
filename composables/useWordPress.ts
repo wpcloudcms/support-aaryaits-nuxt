@@ -17,14 +17,32 @@ export function useWordPress() {
     return res.json() as Promise<T>
   }
 
-  const getIssues = (params = '') => wpFetch(`/wp-json/wp/v2/issue?per_page=100&${params}`)
-  const getIssue = (id: number) => wpFetch(`/wp-json/wp/v2/issue/${id}`)
-  const createIssue = (data: Record<string, unknown>) => wpFetch('/wp-json/wp/v2/issue', { method: 'POST', body: JSON.stringify(data) })
-  const updateIssue = (id: number, data: Record<string, unknown>) => wpFetch(`/wp-json/wp/v2/issue/${id}`, { method: 'POST', body: JSON.stringify(data) })
-  const deleteIssue = (id: number) => wpFetch(`/wp-json/wp/v2/issue/${id}`, { method: 'DELETE' })
-  const getProjects = () => wpFetch('/wp-json/wp/v2/project?per_page=100')
-  const createProject = (data: Record<string, unknown>) => wpFetch('/wp-json/wp/v2/project', { method: 'POST', body: JSON.stringify(data) })
-  const getMembers = () => wpFetch('/wp-json/wp/v2/users?per_page=100')
+  // Tickets (CPT: ticket)
+  const getTickets = (params = '') => wpFetch(`/wp-json/wp/v2/ticket?per_page=100&${params}`)
+  const getTicket = (id: number) => wpFetch(`/wp-json/wp/v2/ticket/${id}`)
+  const createTicket = (data: Record<string, unknown>) => wpFetch('/wp-json/wp/v2/ticket', { method: 'POST', body: JSON.stringify(data) })
+  const updateTicket = (id: number, data: Record<string, unknown>) => wpFetch(`/wp-json/wp/v2/ticket/${id}`, { method: 'POST', body: JSON.stringify(data) })
+  const deleteTicket = (id: number) => wpFetch(`/wp-json/wp/v2/ticket/${id}`, { method: 'DELETE' })
 
-  return { setToken, getIssues, getIssue, createIssue, updateIssue, deleteIssue, getProjects, createProject, getMembers }
+  // Projects (CPT: project)
+  const getProjects = (params = '') => wpFetch(`/wp-json/wp/v2/project?per_page=100&${params}`)
+  const getProject = (id: number) => wpFetch(`/wp-json/wp/v2/project/${id}`)
+  const createProject = (data: Record<string, unknown>) => wpFetch('/wp-json/wp/v2/project', { method: 'POST', body: JSON.stringify(data) })
+  const updateProject = (id: number, data: Record<string, unknown>) => wpFetch(`/wp-json/wp/v2/project/${id}`, { method: 'POST', body: JSON.stringify(data) })
+
+  // Customers (CPT: customer)
+  const getCustomers = (params = '') => wpFetch(`/wp-json/wp/v2/customer?per_page=100&${params}`)
+  const getCustomer = (id: number) => wpFetch(`/wp-json/wp/v2/customer/${id}`)
+  const createCustomer = (data: Record<string, unknown>) => wpFetch('/wp-json/wp/v2/customer', { method: 'POST', body: JSON.stringify(data) })
+
+  // WP Users (members/team)
+  const getUsers = () => wpFetch('/wp-json/wp/v2/users?per_page=100')
+
+  return {
+    setToken,
+    getTickets, getTicket, createTicket, updateTicket, deleteTicket,
+    getProjects, getProject, createProject, updateProject,
+    getCustomers, getCustomer, createCustomer,
+    getUsers,
+  }
 }

@@ -10,12 +10,12 @@ function toggleDark() {
 }
 
 const navItems = [
-  { label: 'My Issues',  icon: 'lucide:user',        to: '/' },
-  { label: 'All Issues', icon: 'lucide:layers',       to: '/issues' },
-  { label: 'Board',      icon: 'lucide:layout-dashboard', to: '/board' },
-  { label: 'Projects',   icon: 'lucide:folder',       to: '/projects' },
-  { label: 'Cycles',     icon: 'lucide:refresh-cw',   to: '/cycles' },
-  { label: 'Settings',   icon: 'lucide:settings',     to: '/settings' },
+  { label: 'My Tickets',  icon: 'lucide:user',             to: '/' },
+  { label: 'All Tickets', icon: 'lucide:ticket',           to: '/issues' },
+  { label: 'Board',       icon: 'lucide:layout-dashboard', to: '/board' },
+  { label: 'Projects',    icon: 'lucide:folder',           to: '/projects' },
+  { label: 'Customers',   icon: 'lucide:users',            to: '/customers' },
+  { label: 'Settings',    icon: 'lucide:settings',         to: '/settings' },
 ]
 </script>
 

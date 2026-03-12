@@ -2,12 +2,12 @@
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
 const { currentUser } = useAuth()
-const { getIssues } = useWordPress()
+const { getTickets } = useWordPress()
 
 const issues = ref<any[]>([])
 
 onMounted(async () => {
-  const all = await getIssues() as any[]
+  const all = await getTickets() as any[]
   // Filter to current user's assigned issues if possible
   issues.value = all
 })

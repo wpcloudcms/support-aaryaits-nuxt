@@ -1,11 +1,11 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
-const { getIssues } = useWordPress()
+const { getTickets } = useWordPress()
 const issues = ref<any[]>([])
 
 onMounted(async () => {
-  issues.value = await getIssues() as any[]
+  issues.value = await getTickets() as any[]
 })
 
 const COLUMNS = [

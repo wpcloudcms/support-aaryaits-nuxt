@@ -2,11 +2,28 @@
 import { useWordPress } from './useWordPress'
 
 const isAuthenticated = ref(false)
-const currentUser = ref<{ id: number; name: string; email: string } | null>(null)
+const currentUser = ref<{ id: number; name: string; email: string; roles: string[] } | null>(null)
+
+const isAdmin = computed(() => currentUser.value?.roles?.includes('administrator') ?? false)
 
 export function useAuth() {
   const { setToken } = useWordPress()
   const config = useRuntimeConfig()
+
+  async function fetchMe(token: string) {
+    const res = await fetch(`${config.public.wpUrl}/wp-json/wp/v2/users/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (res.ok) {
+      const me = await res.json()
+      currentUser.value = {
+        id: me.id,
+        name: me.name,
+        email: me.email ?? '',
+        roles: me.roles ?? [],
+      }
+    }
+  }
 
   async function login(username: string, password: string) {
     const res = await fetch(`${config.public.wpUrl}/wp-json/jwt-auth/v1/token`, {
@@ -18,8 +35,8 @@ export function useAuth() {
     const data = await res.json()
     setToken(data.token)
     if (import.meta.client) localStorage.setItem('wp_token', data.token)
-    currentUser.value = { id: data.user_id, name: data.user_display_name, email: data.user_email }
     isAuthenticated.value = true
+    await fetchMe(data.token)
   }
 
   function logout() {
@@ -30,14 +47,15 @@ export function useAuth() {
     return navigateTo('/login')
   }
 
-  function restoreSession() {
+  async function restoreSession() {
     if (!import.meta.client) return
     const saved = localStorage.getItem('wp_token')
     if (saved) {
       setToken(saved)
       isAuthenticated.value = true
+      await fetchMe(saved)
     }
   }
 
-  return { isAuthenticated, currentUser, login, logout, restoreSession }
+  return { isAuthenticated, currentUser, isAdmin, login, logout, restoreSession }
 }
