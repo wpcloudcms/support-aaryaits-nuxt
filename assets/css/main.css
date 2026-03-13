@@ -5,15 +5,16 @@
   --bg-sidebar: #fafafa;
   --bg-card: #ffffff;
   --bg-hover: #ebebeb;
-  --bg-active: #fff3e8;
+  --bg-active: #e8f0ff;
   --border: #e2e2e2;
   --text-1: #1c1c1c;
   --text-2: #595959;
   --text-3: #9ba2ae;
-  --accent: #f48120;
-  --accent-hover: #d9700f;
+  --accent: #4693FF;
+  --accent-hover: #2f7de0;
+  --success: #2DB35D;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 html.dark {
@@ -21,11 +22,12 @@ html.dark {
   --bg-sidebar: #0d0d0d;
   --bg-card: #1a1a1a;
   --bg-hover: #252525;
-  --bg-active: #2a1e0e;
+  --bg-active: #0e1e2e;
   --border: #2d2d2d;
   --text-1: #ededed;
   --text-2: #9ba2ae;
   --text-3: #505050;
+  --success: #2DB35D;
 }
 
 body {
@@ -47,7 +49,7 @@ body {
 .status-in-progress::after { content: ''; position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #f0a100; }
 .status-in-review { border: 2px solid #0091ff; position: relative; overflow: hidden; }
 .status-in-review::after { content: ''; position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #0091ff; }
-.status-done { background: #26c281; border: 2px solid #26c281; color: white; }
+.status-done { background: #2DB35D; border: 2px solid #2DB35D; color: white; }
 .status-done::after { content: '✓'; }
 .status-cancelled { background: var(--border); border: 2px solid var(--border); color: var(--text-3); }
 .status-cancelled::after { content: '—'; }
