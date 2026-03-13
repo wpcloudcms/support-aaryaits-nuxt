@@ -11,7 +11,7 @@ export function useAuth() {
   const config = useRuntimeConfig()
 
   async function fetchMe(token: string) {
-    const res = await fetch(`${config.public.wpUrl}/wp-json/wp/v2/users/me`, {
+    const res = await fetch(`${config.public.wpUrl}/wp-json/wp/v2/users/me?context=edit`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (res.ok) {
