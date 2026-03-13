@@ -56,8 +56,22 @@ const statusClass: Record<string, string> = {
   todo: 'status-todo', 'in-progress': 'status-in-progress',
   'in-review': 'status-in-review', done: 'status-done', cancelled: 'status-cancelled',
 }
+const statusLabel: Record<string, string> = {
+  todo: 'Todo', 'in-progress': 'In Progress', 'in-review': 'In Review',
+  done: 'Done', cancelled: 'Cancelled',
+}
+const statusColor: Record<string, { bg: string; text: string }> = {
+  todo:        { bg: '#f0f0f0',  text: '#666' },
+  'in-progress': { bg: '#fff3e0', text: '#e07b00' },
+  'in-review': { bg: '#e8f0ff',  text: '#2563eb' },
+  done:        { bg: '#e6f9ee',  text: '#2DB35D' },
+  cancelled:   { bg: '#fdecea',  text: '#e53935' },
+}
 const priorityColor: Record<string, string> = {
   urgent: '#ff5e5e', high: '#f0a100', medium: '#0091ff', low: '#888',
+}
+const priorityLabel: Record<string, string> = {
+  urgent: 'Urgent', high: 'High', medium: 'Medium', low: 'Low',
 }
 </script>
 
@@ -81,10 +95,22 @@ const priorityColor: Record<string, string> = {
         <span class="status-icon shrink-0" :class="statusClass[ticket.meta?.status ?? 'todo']" />
         <span class="flex-1 truncate">{{ ticket.title?.rendered ?? ticket.title }}</span>
 
+        <!-- Status badge -->
+        <span class="text-xs px-2 py-0.5 rounded-full shrink-0 font-medium"
+          :style="{ background: statusColor[ticket.meta?.status ?? 'todo']?.bg, color: statusColor[ticket.meta?.status ?? 'todo']?.text }">
+          {{ statusLabel[ticket.meta?.status ?? 'todo'] ?? ticket.meta?.status ?? '—' }}
+        </span>
+
+        <!-- Priority badge -->
+        <span class="text-xs px-2 py-0.5 rounded-full shrink-0 font-medium"
+          :style="{ background: 'var(--bg-hover)', color: priorityColor[ticket.meta?.priority] ?? 'var(--text-2)' }">
+          {{ priorityLabel[ticket.meta?.priority] ?? ticket.meta?.priority ?? '—' }}
+        </span>
+
         <!-- Project tag -->
         <span v-if="ticket.meta_box?.project" class="text-xs px-2 py-0.5 rounded shrink-0 truncate max-w-[100px]"
           style="background: var(--bg-active); color: var(--accent)">
-          {{ projects.find(p => String(p.id) === String(ticket.meta_box.project))?.title?.rendered ?? '—' }}
+          {{ projects.find((p: any) => String(p.id) === String(ticket.meta_box.project))?.title?.rendered ?? '—' }}
         </span>
 
         <!-- Assigned member avatar -->
@@ -94,11 +120,6 @@ const priorityColor: Record<string, string> = {
           {{ memberInitial(ticket) }}
         </div>
         <div v-else class="w-5 h-5 rounded-full border shrink-0" style="border-color: var(--border)" />
-
-        <span class="text-xs capitalize px-2 py-0.5 rounded shrink-0"
-          :style="{ background: 'var(--bg-hover)', color: priorityColor[ticket.meta?.priority] ?? 'var(--text-2)' }">
-          {{ ticket.meta?.priority ?? '—' }}
-        </span>
       </div>
       <div v-if="!loading && tickets.length === 0" class="p-8 text-center text-sm" style="color: var(--text-3)">No tickets yet.</div>
     </div>
