@@ -1,30 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-app: #ffffff;
-  --bg-sidebar: #f8f8f8;
+  --bg-app: #f3f4f6;
+  --bg-sidebar: #fafafa;
   --bg-card: #ffffff;
-  --bg-hover: #f3f3f3;
-  --bg-active: #ede9fe;
-  --border: #e5e5e5;
-  --text-1: #1a1a1a;
-  --text-2: #6b6b6b;
-  --text-3: #a0a0a0;
-  --accent: #5e6ad2;
-  --accent-hover: #4c5bc4;
+  --bg-hover: #ebebeb;
+  --bg-active: #fff3e8;
+  --border: #e2e2e2;
+  --text-1: #1c1c1c;
+  --text-2: #595959;
+  --text-3: #9ba2ae;
+  --accent: #f48120;
+  --accent-hover: #d9700f;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 13px;
 }
 
 html.dark {
-  --bg-app: #0d0d0d;
-  --bg-sidebar: #141414;
+  --bg-app: #111111;
+  --bg-sidebar: #0d0d0d;
   --bg-card: #1a1a1a;
-  --bg-hover: #222222;
-  --bg-active: #2a2847;
-  --border: #2a2a2a;
-  --text-1: #e2e2e2;
-  --text-2: #888888;
+  --bg-hover: #252525;
+  --bg-active: #2a1e0e;
+  --border: #2d2d2d;
+  --text-1: #ededed;
+  --text-2: #9ba2ae;
   --text-3: #505050;
 }
 
