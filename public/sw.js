@@ -12,7 +12,7 @@ self.addEventListener('push', event => {
       body: data.body || '',
       icon: '/favicon.ico',
       badge: '/favicon.ico',
-      tag: data.tag || 'support-notif',
+      tag: data.tag || ('support-notif-' + Date.now()),
       data: { url: data.url || '/issues' },
     })
   )
