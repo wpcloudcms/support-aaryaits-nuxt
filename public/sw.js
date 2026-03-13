@@ -1,5 +1,12 @@
 self.addEventListener('push', event => {
-  const data = event.data ? event.data.json() : {}
+  let data = {}
+  if (event.data) {
+    try {
+      data = event.data.json()
+    } catch (e) {
+      data = { title: 'Support Aaryaits', body: event.data.text() }
+    }
+  }
   event.waitUntil(
     self.registration.showNotification(data.title || 'Support Aaryaits', {
       body: data.body || '',
