@@ -2,11 +2,13 @@
 definePageMeta({ layout: false })
 
 const { login, isAuthenticated } = useAuth()
+const { logoUrl, siteName, loadSiteSettings } = useSiteSettings()
 const form = reactive({ username: '', password: '' })
 const error = ref('')
 const loading = ref(false)
 
 if (isAuthenticated.value) await navigateTo('/')
+onMounted(() => loadSiteSettings())
 
 async function submit() {
   error.value = ''
@@ -26,7 +28,12 @@ async function submit() {
   <div class="min-h-screen flex items-center justify-center" style="background: var(--bg-app)">
     <div class="w-full max-w-sm p-8 rounded-xl border" style="background: var(--bg-card); border-color: var(--border)">
       <div class="mb-8 text-center">
-        <div class="text-2xl font-bold mb-1" style="color: var(--text-1)">Nexus</div>
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <img v-if="logoUrl" :src="logoUrl" alt="logo"
+            class="object-contain shrink-0"
+            style="max-width: 40px; max-height: 32px" />
+          <span class="text-2xl font-bold" style="color: var(--text-1)">{{ siteName }}</span>
+        </div>
         <div class="text-sm" style="color: var(--text-2)">Sign in to your workspace</div>
       </div>
 
