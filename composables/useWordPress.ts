@@ -76,6 +76,14 @@ export function useWordPress() {
   const unsubscribePush = (endpoint: string) =>
     wpFetch<{ ok: boolean }>('/wp-json/support/v1/push/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint }) })
 
+  // Per-ticket notification subscription
+  const getTicketNotifyStatus = (id: number) =>
+    wpFetch<{ subscribed: boolean }>(`/wp-json/support/v1/ticket-notify/${id}`)
+  const subscribeTicketNotify = (id: number) =>
+    wpFetch<{ ok: boolean; subscribed: boolean }>(`/wp-json/support/v1/ticket-notify/${id}`, { method: 'POST' })
+  const unsubscribeTicketNotify = (id: number) =>
+    wpFetch<{ ok: boolean; subscribed: boolean }>(`/wp-json/support/v1/ticket-notify/${id}`, { method: 'DELETE' })
+
   return {
     setToken,
     getTickets, getTicket, createTicket, updateTicket, deleteTicket,
@@ -87,5 +95,6 @@ export function useWordPress() {
     getComments, addComment,
     getNotifications,
     getVapidKey, subscribePush, unsubscribePush,
+    getTicketNotifyStatus, subscribeTicketNotify, unsubscribeTicketNotify,
   }
 }

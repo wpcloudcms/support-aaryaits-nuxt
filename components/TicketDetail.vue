@@ -2,8 +2,9 @@
 const props = defineProps<{ ticket: any; members: any[]; projects: any[] }>()
 const emit = defineEmits<{ close: []; updated: [ticket: any] }>()
 
-const { updateTicket, getHistory, saveHistory, getComments, addComment } = useWordPress()
+const { updateTicket, getHistory, saveHistory, getComments, addComment, getTicketNotifyStatus, subscribeTicketNotify, unsubscribeTicketNotify } = useWordPress()
 const { currentUser } = useAuth()
+const { isSubscribed: pushSubscribed, isSupported: pushSupported, subscribe: subscribePush } = usePushNotifications()
 
 const form = reactive({
   title: '',
@@ -16,6 +17,34 @@ const form = reactive({
 
 // Snapshot for change detection
 const snapshot = reactive({ title: '', status: '', priority: '', assigned_member: '', project: '' })
+
+// ── Per-ticket notification subscription ─────────────────────
+const ticketSubscribed = ref(false)
+const ticketNotifyLoading = ref(false)
+
+async function loadNotifyStatus() {
+  if (!props.ticket?.id) return
+  const res = await getTicketNotifyStatus(props.ticket.id).catch(() => null)
+  if (res) ticketSubscribed.value = res.subscribed
+}
+
+async function toggleTicketNotify() {
+  if (ticketNotifyLoading.value) return
+  // Ensure browser push is subscribed first
+  if (pushSupported && !pushSubscribed.value) {
+    await subscribePush()
+    if (!pushSubscribed.value) return // permission denied
+  }
+  ticketNotifyLoading.value = true
+  if (ticketSubscribed.value) {
+    await unsubscribeTicketNotify(props.ticket.id).catch(() => {})
+    ticketSubscribed.value = false
+  } else {
+    await subscribeTicketNotify(props.ticket.id).catch(() => {})
+    ticketSubscribed.value = true
+  }
+  ticketNotifyLoading.value = false
+}
 
 watch(() => props.ticket, (t) => {
   if (!t) return
@@ -31,6 +60,7 @@ watch(() => props.ticket, (t) => {
   })
   loadHistory()
   loadComments()
+  loadNotifyStatus()
 }, { immediate: true })
 
 // ── Save ticket ──────────────────────────────────────────────
@@ -159,6 +189,16 @@ function userInitial(name: string) {
     <div class="flex items-center justify-between px-5 h-12 border-b shrink-0" style="border-color: var(--border)">
       <span class="text-xs font-medium" style="color: var(--text-3)">Ticket #{{ ticket.id }}</span>
       <div class="flex items-center gap-2">
+        <!-- Per-ticket notification toggle -->
+        <button @click="toggleTicketNotify" :disabled="ticketNotifyLoading"
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border transition-colors disabled:opacity-50"
+          :style="ticketSubscribed
+            ? 'border-color: var(--accent); background: var(--bg-active); color: var(--accent)'
+            : 'border-color: var(--border); color: var(--text-3)'"
+          :title="ticketSubscribed ? 'Remove notification for this ticket' : 'Subscribe to notifications for this ticket'">
+          <Icon :name="ticketSubscribed ? 'lucide:bell-ring' : 'lucide:bell-plus'" class="w-3.5 h-3.5" />
+          <span>{{ ticketSubscribed ? 'Unsubscribe' : 'Subscribe' }}</span>
+        </button>
         <button @click="saveAndClose" :disabled="saving"
           class="px-3 py-1 rounded text-xs font-medium border disabled:opacity-60"
           style="border-color: var(--accent); color: var(--accent)">
