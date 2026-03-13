@@ -3,7 +3,7 @@ definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
 const { currentUser, isAdmin, logout } = useAuth()
 const { getUsers, getThemeSettings, saveThemeSettings, uploadSiteLogo, saveSiteSettings } = useWordPress()
-const { logoUrl, siteName, loadSiteSettings } = useSiteSettings()
+const { logoUrl, siteName, sidebarWidth, loadSiteSettings } = useSiteSettings()
 const members = ref<any[]>([])
 
 onMounted(async () => {
@@ -12,6 +12,7 @@ onMounted(async () => {
     await loadTheme()
     await loadSiteSettings()
     editSiteName.value = siteName.value
+    editSidebarWidth.value = sidebarWidth.value
   }
 })
 
@@ -27,6 +28,7 @@ const wpAdminUrl = useRuntimeConfig().public.wpUrl
 
 // ── Site Identity (admin only) ────────────────────────────────
 const editSiteName = ref('Support Aaryaits')
+const editSidebarWidth = ref(280)
 const logoPreview = ref('')
 const logoSaving = ref(false)
 const logoSaved = ref(false)
@@ -47,8 +49,10 @@ async function saveSiteIdentity() {
       logoUrl.value = res.url
       logoPreview.value = ''
     }
-    await saveSiteSettings({ site_name: editSiteName.value })
+    const w = Math.max(280, Math.min(480, Number(editSidebarWidth.value)))
+    await saveSiteSettings({ site_name: editSiteName.value, sidebar_width: w })
     siteName.value = editSiteName.value
+    sidebarWidth.value = w
     logoSaved.value = true
     setTimeout(() => logoSaved.value = false, 2500)
   } catch {}
@@ -229,6 +233,20 @@ html.dark {
                 <input v-model="editSiteName" type="text"
                   class="w-full px-3 py-1.5 rounded-lg border text-sm outline-none focus:border-[var(--accent)]"
                   style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+              </div>
+              <!-- Sidebar Width -->
+              <div>
+                <label class="text-xs font-medium block mb-1.5" style="color: var(--text-2)">
+                  Sidebar Width
+                  <span style="color: var(--text-3)">({{ editSidebarWidth }}px · min 280, max 480)</span>
+                </label>
+                <div class="flex items-center gap-3">
+                  <input v-model.number="editSidebarWidth" type="range" min="280" max="480" step="10"
+                    class="flex-1 accent-[var(--accent)]" />
+                  <input v-model.number="editSidebarWidth" type="number" min="280" max="480"
+                    class="w-20 px-2 py-1 rounded-lg border text-sm text-center outline-none focus:border-[var(--accent)]"
+                    style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+                </div>
               </div>
               <!-- Logo Upload -->
               <div>

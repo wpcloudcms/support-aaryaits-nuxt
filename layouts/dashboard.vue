@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { currentUser, logout } = useAuth()
-const { logoUrl, siteName, loadSiteSettings } = useSiteSettings()
+const { logoUrl, siteName, sidebarWidth, loadSiteSettings } = useSiteSettings()
 const route = useRoute()
 const collapsed = ref(false)
 const dark = ref(false)
@@ -54,8 +54,9 @@ function userInitial(name: string) {
     <!-- Sidebar -->
     <aside
       class="flex flex-col border-r transition-all duration-200 shrink-0"
-      :class="collapsed ? 'w-12' : 'w-52'"
-      style="background: var(--bg-sidebar); border-color: var(--border)"
+      :style="collapsed
+        ? 'width:48px; background: var(--bg-sidebar); border-color: var(--border)'
+        : `width:${sidebarWidth}px; background: var(--bg-sidebar); border-color: var(--border)`"
     >
       <!-- Logo row -->
       <div class="flex items-center h-12 px-3 border-b shrink-0 gap-2" style="border-color: var(--border)">
