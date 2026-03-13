@@ -28,7 +28,7 @@ const wpAdminUrl = useRuntimeConfig().public.wpUrl
 
 // ── Site Identity (admin only) ────────────────────────────────
 const editSiteName = ref('Support Aaryaits')
-const editSidebarWidth = ref(240)
+const editSidebarWidth = ref(200)
 const logoPreview = ref('')
 const logoSaving = ref(false)
 const logoSaved = ref(false)
@@ -49,7 +49,7 @@ async function saveSiteIdentity() {
       logoUrl.value = res.url
       logoPreview.value = ''
     }
-    const w = Math.max(240, Math.min(320, Number(editSidebarWidth.value)))
+    const w = Math.max(200, Math.min(300, Number(editSidebarWidth.value)))
     await saveSiteSettings({ site_name: editSiteName.value, sidebar_width: w })
     siteName.value = editSiteName.value
     sidebarWidth.value = w
@@ -238,12 +238,12 @@ html.dark {
               <div>
                 <label class="text-xs font-medium block mb-1.5" style="color: var(--text-2)">
                   Sidebar Width
-                  <span style="color: var(--text-3)">({{ editSidebarWidth }}px · min 240, max 320)</span>
+                  <span style="color: var(--text-3)">({{ editSidebarWidth }}px · min 200, max 300)</span>
                 </label>
                 <div class="flex items-center gap-3">
-                  <input v-model.number="editSidebarWidth" type="range" min="240" max="320" step="10"
+                  <input v-model.number="editSidebarWidth" type="range" min="200" max="300" step="10"
                     class="flex-1 accent-[var(--accent)]" />
-                  <input v-model.number="editSidebarWidth" type="number" min="240" max="320"
+                  <input v-model.number="editSidebarWidth" type="number" min="200" max="300"
                     class="w-20 px-2 py-1 rounded-lg border text-sm text-center outline-none focus:border-[var(--accent)]"
                     style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
                 </div>
