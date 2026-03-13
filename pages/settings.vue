@@ -2,22 +2,99 @@
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
 const { currentUser, isAdmin, logout } = useAuth()
-const { getUsers } = useWordPress()
+const { getUsers, getThemeSettings, saveThemeSettings } = useWordPress()
 const members = ref<any[]>([])
 
 onMounted(async () => {
   members.value = await getUsers() as any[]
+  if (isAdmin.value) await loadTheme()
 })
 
 const roleColor: Record<string, string> = {
-  administrator: '#5e6ad2',
-  editor: '#26c281',
+  administrator: '#4693FF',
+  editor: '#2DB35D',
   author: '#f0a100',
   contributor: '#888',
   subscriber: '#888',
 }
 
 const wpAdminUrl = useRuntimeConfig().public.wpUrl
+
+// ── Theme Customizer (admin only) ─────────────────────────────
+const themeDefaults: Record<string, string> = {
+  light_accent: '#4693FF', light_accent_hover: '#2f7de0',
+  light_bg_app: '#f3f4f6', light_bg_sidebar: '#fafafa', light_bg_card: '#ffffff',
+  light_bg_hover: '#ebebeb', light_bg_active: '#e8f0ff',
+  light_border: '#e2e2e2',
+  light_text_1: '#1c1c1c', light_text_2: '#595959', light_text_3: '#9ba2ae',
+  light_success: '#2DB35D',
+  dark_accent: '#4693FF', dark_accent_hover: '#2f7de0',
+  dark_bg_app: '#111111', dark_bg_sidebar: '#0d0d0d', dark_bg_card: '#1a1a1a',
+  dark_bg_hover: '#252525', dark_bg_active: '#0e1e2e',
+  dark_border: '#2d2d2d',
+  dark_text_1: '#ededed', dark_text_2: '#9ba2ae', dark_text_3: '#505050',
+  dark_success: '#2DB35D',
+}
+
+const theme = reactive({ ...themeDefaults })
+const themeSaving = ref(false)
+const themeSaved = ref(false)
+
+const colorFields = [
+  { key: 'accent',       label: 'Accent' },
+  { key: 'accent_hover', label: 'Accent Hover' },
+  { key: 'bg_app',       label: 'App Background' },
+  { key: 'bg_sidebar',   label: 'Sidebar Background' },
+  { key: 'bg_card',      label: 'Card Background' },
+  { key: 'bg_hover',     label: 'Hover Background' },
+  { key: 'bg_active',    label: 'Active Background' },
+  { key: 'border',       label: 'Border' },
+  { key: 'text_1',       label: 'Text Primary' },
+  { key: 'text_2',       label: 'Text Secondary' },
+  { key: 'text_3',       label: 'Text Muted' },
+  { key: 'success',      label: 'Success / Done' },
+]
+
+async function loadTheme() {
+  const s = await getThemeSettings().catch(() => null)
+  if (s) Object.assign(theme, s)
+}
+
+async function saveTheme() {
+  themeSaving.value = true
+  await saveThemeSettings({ ...theme }).catch(() => {})
+  themeSaving.value = false
+  themeSaved.value = true
+  setTimeout(() => themeSaved.value = false, 2500)
+  // Apply immediately to current page
+  applyThemeLive()
+}
+
+function resetTheme() {
+  Object.assign(theme, themeDefaults)
+}
+
+function applyThemeLive() {
+  const css = `:root {
+  --bg-app: ${theme.light_bg_app}; --bg-sidebar: ${theme.light_bg_sidebar};
+  --bg-card: ${theme.light_bg_card}; --bg-hover: ${theme.light_bg_hover};
+  --bg-active: ${theme.light_bg_active}; --border: ${theme.light_border};
+  --text-1: ${theme.light_text_1}; --text-2: ${theme.light_text_2};
+  --text-3: ${theme.light_text_3}; --accent: ${theme.light_accent};
+  --accent-hover: ${theme.light_accent_hover}; --success: ${theme.light_success};
+}
+html.dark {
+  --bg-app: ${theme.dark_bg_app}; --bg-sidebar: ${theme.dark_bg_sidebar};
+  --bg-card: ${theme.dark_bg_card}; --bg-hover: ${theme.dark_bg_hover};
+  --bg-active: ${theme.dark_bg_active}; --border: ${theme.dark_border};
+  --text-1: ${theme.dark_text_1}; --text-2: ${theme.dark_text_2};
+  --text-3: ${theme.dark_text_3}; --accent: ${theme.dark_accent};
+  --accent-hover: ${theme.dark_accent_hover}; --success: ${theme.dark_success};
+}`
+  let el = document.getElementById('custom-theme') as HTMLStyleElement | null
+  if (!el) { el = document.createElement('style'); el.id = 'custom-theme'; document.head.appendChild(el) }
+  el.textContent = css
+}
 </script>
 
 <template>
@@ -80,6 +157,77 @@ const wpAdminUrl = useRuntimeConfig().public.wpUrl
         </div>
         <p v-if="!isAdmin" class="text-xs mt-2" style="color: var(--text-3)">
           Only administrators can add or edit members.
+        </p>
+      </section>
+
+      <!-- Theme Customizer (admin only) -->
+      <section v-if="isAdmin">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-3)">Theme Colors</h2>
+          <div class="flex items-center gap-2">
+            <button @click="resetTheme"
+              class="text-xs px-2.5 py-1 rounded-lg border"
+              style="border-color: var(--border); color: var(--text-2)">
+              Reset
+            </button>
+            <button @click="saveTheme" :disabled="themeSaving"
+              class="text-xs px-3 py-1 rounded-lg text-white disabled:opacity-60"
+              :style="themeSaved ? 'background: var(--success)' : 'background: var(--accent)'">
+              {{ themeSaving ? 'Saving…' : themeSaved ? 'Saved!' : 'Save Theme' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="rounded-xl border overflow-hidden" style="background: var(--bg-card); border-color: var(--border)">
+          <!-- Column headers -->
+          <div class="grid grid-cols-3 gap-4 px-4 py-2 border-b text-xs font-semibold"
+            style="border-color: var(--border); color: var(--text-3)">
+            <span>Color</span>
+            <span class="text-center">Light Mode</span>
+            <span class="text-center">Dark Mode</span>
+          </div>
+
+          <!-- Color rows -->
+          <div v-for="field in colorFields" :key="field.key"
+            class="grid grid-cols-3 gap-4 items-center px-4 py-2.5 border-b last:border-b-0"
+            style="border-color: var(--border)">
+            <span class="text-xs" style="color: var(--text-2)">{{ field.label }}</span>
+
+            <!-- Light -->
+            <div class="flex items-center gap-2 justify-center">
+              <div class="relative w-7 h-7 rounded-md overflow-hidden border shrink-0 cursor-pointer"
+                style="border-color: var(--border)">
+                <input type="color" :value="(theme as any)['light_' + field.key]"
+                  @input="(theme as any)['light_' + field.key] = ($event.target as HTMLInputElement).value"
+                  class="absolute -inset-1 w-10 h-10 cursor-pointer opacity-0" />
+                <div class="w-full h-full rounded-md"
+                  :style="{ background: (theme as any)['light_' + field.key] }" />
+              </div>
+              <input type="text" :value="(theme as any)['light_' + field.key]"
+                @input="(theme as any)['light_' + field.key] = ($event.target as HTMLInputElement).value"
+                class="w-20 px-1.5 py-0.5 rounded border text-xs font-mono outline-none focus:border-[var(--accent)]"
+                style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+            </div>
+
+            <!-- Dark -->
+            <div class="flex items-center gap-2 justify-center">
+              <div class="relative w-7 h-7 rounded-md overflow-hidden border shrink-0 cursor-pointer"
+                style="border-color: var(--border)">
+                <input type="color" :value="(theme as any)['dark_' + field.key]"
+                  @input="(theme as any)['dark_' + field.key] = ($event.target as HTMLInputElement).value"
+                  class="absolute -inset-1 w-10 h-10 cursor-pointer opacity-0" />
+                <div class="w-full h-full rounded-md"
+                  :style="{ background: (theme as any)['dark_' + field.key] }" />
+              </div>
+              <input type="text" :value="(theme as any)['dark_' + field.key]"
+                @input="(theme as any)['dark_' + field.key] = ($event.target as HTMLInputElement).value"
+                class="w-20 px-1.5 py-0.5 rounded border text-xs font-mono outline-none focus:border-[var(--accent)]"
+                style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+            </div>
+          </div>
+        </div>
+        <p class="text-xs mt-2" style="color: var(--text-3)">
+          Changes are saved to WordPress and applied instantly to all users.
         </p>
       </section>
 
