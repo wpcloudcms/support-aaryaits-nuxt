@@ -82,6 +82,14 @@ export function useWordPress() {
   const saveThemeSettings = (settings: Record<string, string>) =>
     wpFetch<{ ok: boolean; settings: Record<string, string> }>('/wp-json/support/v1/theme-settings', { method: 'POST', body: JSON.stringify(settings) })
 
+  // Site settings (logo + name)
+  const getSiteSettings = () =>
+    wpFetch<{ site_name: string; logo_url: string }>('/wp-json/support/v1/site-settings')
+  const saveSiteSettings = (settings: { site_name?: string; logo_url?: string }) =>
+    wpFetch<{ ok: boolean; settings: { site_name: string; logo_url: string } }>('/wp-json/support/v1/site-settings', { method: 'POST', body: JSON.stringify(settings) })
+  const uploadSiteLogo = (data: string) =>
+    wpFetch<{ ok: boolean; url: string }>('/wp-json/support/v1/site-logo', { method: 'POST', body: JSON.stringify({ data }) })
+
   // Per-ticket notification subscription
   const getTicketNotifyStatus = (id: number) =>
     wpFetch<{ subscribed: boolean }>(`/wp-json/support/v1/ticket-notify/${id}`)
@@ -103,5 +111,6 @@ export function useWordPress() {
     getVapidKey, subscribePush, unsubscribePush,
     getTicketNotifyStatus, subscribeTicketNotify, unsubscribeTicketNotify,
     getThemeSettings, saveThemeSettings,
+    getSiteSettings, saveSiteSettings, uploadSiteLogo,
   }
 }

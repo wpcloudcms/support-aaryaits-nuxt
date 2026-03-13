@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { currentUser, logout } = useAuth()
+const { logoUrl, siteName, loadSiteSettings } = useSiteSettings()
 const route = useRoute()
 const collapsed = ref(false)
 const dark = ref(false)
@@ -23,7 +24,7 @@ const navItems = [
 const { notifications, unreadCount, markAllRead, startPolling, stopPolling } = useNotifications()
 const showNotifPanel = ref(false)
 
-onMounted(() => startPolling())
+onMounted(() => { startPolling(); loadSiteSettings() })
 onUnmounted(() => stopPolling())
 
 function openNotifPanel() {
@@ -57,9 +58,14 @@ function userInitial(name: string) {
       style="background: var(--bg-sidebar); border-color: var(--border)"
     >
       <!-- Logo row -->
-      <div class="flex items-center h-12 px-3 border-b shrink-0" style="border-color: var(--border)">
-        <span v-if="!collapsed" class="font-bold text-sm flex-1" style="color: var(--text-1)">Support Aaryaits</span>
-        <button @click="collapsed = !collapsed" class="p-1 rounded hover:bg-[var(--bg-hover)]" style="color: var(--text-3)">
+      <div class="flex items-center h-12 px-3 border-b shrink-0 gap-2" style="border-color: var(--border)">
+        <template v-if="!collapsed">
+          <img v-if="logoUrl" :src="logoUrl" alt="logo"
+            class="object-contain shrink-0"
+            style="max-width: 100px; max-height: 32px" />
+          <span class="font-bold text-sm flex-1 truncate" style="color: var(--text-1)">{{ siteName }}</span>
+        </template>
+        <button @click="collapsed = !collapsed" class="p-1 rounded hover:bg-[var(--bg-hover)] shrink-0 ml-auto" style="color: var(--text-3)">
           <Icon :name="collapsed ? 'lucide:chevron-right' : 'lucide:chevron-left'" class="w-4 h-4" />
         </button>
       </div>

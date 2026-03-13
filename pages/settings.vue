@@ -2,12 +2,17 @@
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
 const { currentUser, isAdmin, logout } = useAuth()
-const { getUsers, getThemeSettings, saveThemeSettings } = useWordPress()
+const { getUsers, getThemeSettings, saveThemeSettings, uploadSiteLogo, saveSiteSettings } = useWordPress()
+const { logoUrl, siteName, loadSiteSettings } = useSiteSettings()
 const members = ref<any[]>([])
 
 onMounted(async () => {
   members.value = await getUsers() as any[]
-  if (isAdmin.value) await loadTheme()
+  if (isAdmin.value) {
+    await loadTheme()
+    await loadSiteSettings()
+    editSiteName.value = siteName.value
+  }
 })
 
 const roleColor: Record<string, string> = {
@@ -19,6 +24,36 @@ const roleColor: Record<string, string> = {
 }
 
 const wpAdminUrl = useRuntimeConfig().public.wpUrl
+
+// ── Site Identity (admin only) ────────────────────────────────
+const editSiteName = ref('Support Aaryaits')
+const logoPreview = ref('')
+const logoSaving = ref(false)
+const logoSaved = ref(false)
+
+function onLogoChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => { logoPreview.value = reader.result as string }
+  reader.readAsDataURL(file)
+}
+
+async function saveSiteIdentity() {
+  logoSaving.value = true
+  try {
+    if (logoPreview.value) {
+      const res = await uploadSiteLogo(logoPreview.value)
+      logoUrl.value = res.url
+      logoPreview.value = ''
+    }
+    await saveSiteSettings({ site_name: editSiteName.value })
+    siteName.value = editSiteName.value
+    logoSaved.value = true
+    setTimeout(() => logoSaved.value = false, 2500)
+  } catch {}
+  logoSaving.value = false
+}
 
 // ── Theme Customizer (admin only) ─────────────────────────────
 const themeDefaults: Record<string, string> = {
@@ -158,6 +193,58 @@ html.dark {
         <p v-if="!isAdmin" class="text-xs mt-2" style="color: var(--text-3)">
           Only administrators can add or edit members.
         </p>
+      </section>
+
+      <!-- Site Identity (admin only) -->
+      <section v-if="isAdmin">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-3)">Site Identity</h2>
+          <button @click="saveSiteIdentity" :disabled="logoSaving"
+            class="text-xs px-3 py-1 rounded-lg text-white disabled:opacity-60"
+            :style="logoSaved ? 'background: var(--success)' : 'background: var(--accent)'">
+            {{ logoSaving ? 'Saving…' : logoSaved ? 'Saved!' : 'Save' }}
+          </button>
+        </div>
+        <div class="rounded-xl border p-4 space-y-4" style="background: var(--bg-card); border-color: var(--border)">
+
+          <!-- Site Name -->
+          <div>
+            <label class="text-xs font-medium block mb-1.5" style="color: var(--text-2)">Site Name</label>
+            <input v-model="editSiteName" type="text"
+              class="w-full px-3 py-1.5 rounded-lg border text-sm outline-none focus:border-[var(--accent)]"
+              style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+          </div>
+
+          <!-- Logo Upload -->
+          <div>
+            <label class="text-xs font-medium block mb-1.5" style="color: var(--text-2)">Logo <span style="color: var(--text-3)">(max 100 × 80 px)</span></label>
+            <div class="flex items-center gap-4">
+              <!-- Current / preview -->
+              <div class="w-24 h-16 rounded-lg border flex items-center justify-center overflow-hidden shrink-0"
+                style="border-color: var(--border); background: var(--bg-app)">
+                <img v-if="logoPreview || logoUrl"
+                  :src="logoPreview || logoUrl"
+                  alt="logo preview"
+                  class="object-contain"
+                  style="max-width: 100px; max-height: 80px" />
+                <Icon v-else name="lucide:image" class="w-6 h-6" style="color: var(--text-3)" />
+              </div>
+              <!-- File input -->
+              <label class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border cursor-pointer hover:bg-[var(--bg-hover)]"
+                style="border-color: var(--border); color: var(--text-2)">
+                <Icon name="lucide:upload" class="w-3.5 h-3.5" />
+                Choose image
+                <input type="file" accept="image/png,image/jpeg,image/gif,image/webp"
+                  class="sr-only" @change="onLogoChange" />
+              </label>
+              <button v-if="logoPreview" @click="logoPreview = ''"
+                class="text-xs px-2 py-1 rounded border"
+                style="border-color: var(--border); color: var(--text-3)">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- Theme Customizer (admin only) -->

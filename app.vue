@@ -46,6 +46,9 @@ if (import.meta.client) {
     .then(r => r.ok ? r.json() : null)
     .then(s => { if (s) applyTheme(s) })
     .catch(() => {})
+
+  const { loadSiteSettings } = useSiteSettings()
+  loadSiteSettings()
 }
 </script>
 
