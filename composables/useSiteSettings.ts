@@ -1,6 +1,6 @@
 const logoUrl = ref('')
 const siteName = ref('Support Aaryaits')
-const sidebarWidth = ref(280)
+const sidebarWidth = ref(240)
 
 export function useSiteSettings() {
   const config = useRuntimeConfig()
@@ -13,7 +13,7 @@ export function useSiteSettings() {
         const s = await res.json()
         if (s.site_name) siteName.value = s.site_name
         logoUrl.value = s.logo_url ?? ''
-        if (s.sidebar_width) sidebarWidth.value = Math.max(280, Math.min(480, Number(s.sidebar_width)))
+        if (s.sidebar_width) sidebarWidth.value = Math.max(240, Math.min(320, Number(s.sidebar_width)))
       }
     } catch {}
   }
