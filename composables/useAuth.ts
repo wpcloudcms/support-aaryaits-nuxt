@@ -53,7 +53,7 @@ export function useAuth() {
     if (saved) {
       setToken(saved)
       isAuthenticated.value = true
-      await fetchMe(saved)
+      await fetchMe(saved).catch(() => {})
     }
   }
 
