@@ -25,8 +25,8 @@ export function useWordPress() {
   const deleteTicket = (id: number) => wpFetch(`/wp-json/wp/v2/ticket/${id}`, { method: 'DELETE' })
 
   // Ticket taxonomy terms
-  const getStatusTerms = () => wpFetch<{ id: number; name: string; slug: string }[]>('/wp-json/wp/v2/ticket_status?per_page=100')
-  const getPriorityTerms = () => wpFetch<{ id: number; name: string; slug: string }[]>('/wp-json/wp/v2/ticket_priority?per_page=100')
+  const getStatusTerms = () => wpFetch<{ id: number; name: string; slug: string }[]>('/wp-json/wp/v2/ticket-status?per_page=100')
+  const getPriorityTerms = () => wpFetch<{ id: number; name: string; slug: string }[]>('/wp-json/wp/v2/ticket-priority?per_page=100')
 
   // Projects (CPT: project)
   const getProjects = (params = '') => wpFetch(`/wp-json/wp/v2/project?per_page=100&${params}`)

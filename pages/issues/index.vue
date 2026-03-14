@@ -29,11 +29,11 @@ onMounted(async () => {
 
 // Helper: get slug from ticket taxonomy term ID
 function statusSlug(ticket: any) {
-  const id = ticket.ticket_status?.[0]
+  const id = ticket['ticket-status']?.[0]
   return statusTerms.value.find(t => t.id === id)?.slug ?? ''
 }
 function prioritySlug(ticket: any) {
-  const id = ticket.ticket_priority?.[0]
+  const id = ticket['ticket-priority']?.[0]
   return priorityTerms.value.find(t => t.id === id)?.slug ?? ''
 }
 
@@ -42,8 +42,8 @@ async function submit() {
     title: form.title,
     status: 'publish',
     meta_box: { assigned_member: form.assigned_member || '', project: form.project || '' },
-    ...(form.status_id ? { ticket_status: [form.status_id] } : {}),
-    ...(form.priority_id ? { ticket_priority: [form.priority_id] } : {}),
+    ...(form.status_id ? { 'ticket-status': [form.status_id] } : {}),
+    ...(form.priority_id ? { 'ticket-priority': [form.priority_id] } : {}),
   })
   tickets.value = await getTickets() as any[]
   showForm.value = false

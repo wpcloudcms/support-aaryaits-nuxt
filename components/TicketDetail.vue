@@ -50,8 +50,8 @@ async function toggleTicketNotify() {
 watch(() => props.ticket, (t) => {
   if (!t) return
   form.title = t.title?.rendered ?? t.title ?? ''
-  form.status_id = t.ticket_status?.[0] ?? props.statusTerms[0]?.id ?? 0
-  form.priority_id = t.ticket_priority?.[0] ?? props.priorityTerms[0]?.id ?? 0
+  form.status_id = t['ticket-status']?.[0] ?? props.statusTerms[0]?.id ?? 0
+  form.priority_id = t['ticket-priority']?.[0] ?? props.priorityTerms[0]?.id ?? 0
   form.assigned_member = t.meta_box?.assigned_member ?? ''
   form.project = t.meta_box?.project ?? ''
   form.content = t.content?.raw ?? ''
@@ -102,8 +102,8 @@ async function save() {
     title: form.title,
     content: form.content,
     meta_box: { assigned_member: form.assigned_member, project: form.project },
-    ...(form.status_id ? { ticket_status: [form.status_id] } : {}),
-    ...(form.priority_id ? { ticket_priority: [form.priority_id] } : {}),
+    ...(form.status_id ? { 'ticket-status': [form.status_id] } : {}),
+    ...(form.priority_id ? { 'ticket-priority': [form.priority_id] } : {}),
   })
   saving.value = false
   emit('updated', updated)
