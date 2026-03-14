@@ -15,11 +15,11 @@ const form = reactive({ title: '', status_id: 0, priority_id: 0, assigned_member
 
 onMounted(async () => {
   ;[tickets.value, members.value, projects.value, statusTerms.value, priorityTerms.value] = await Promise.all([
-    getTickets() as Promise<any[]>,
-    getMembers() as Promise<any[]>,
-    getProjects() as Promise<any[]>,
-    getStatusTerms() as Promise<any[]>,
-    getPriorityTerms() as Promise<any[]>,
+    getTickets().catch(() => []) as Promise<any[]>,
+    getMembers().catch(() => []) as Promise<any[]>,
+    getProjects().catch(() => []) as Promise<any[]>,
+    getStatusTerms().catch(() => []) as Promise<any[]>,
+    getPriorityTerms().catch(() => []) as Promise<any[]>,
   ])
   // Set form defaults to first term in each taxonomy
   form.status_id = statusTerms.value[0]?.id ?? 0
