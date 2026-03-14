@@ -8,6 +8,16 @@ const members = ref<any[]>([])
 const projects = ref<any[]>([])
 const statusTerms = ref<{ id: number; name: string; slug: string }[]>([])
 const priorityTerms = ref<{ id: number; name: string; slug: string }[]>([])
+
+const statusOrder = ['backlog', 'todo', 'in-progress', 'in-review', 'done', 'cancelled']
+const priorityOrder = ['urgent', 'high', 'medium', 'low']
+
+const sortedStatusTerms = computed(() =>
+  [...statusTerms.value].sort((a, b) => statusOrder.indexOf(a.slug) - statusOrder.indexOf(b.slug))
+)
+const sortedPriorityTerms = computed(() =>
+  [...priorityTerms.value].sort((a, b) => priorityOrder.indexOf(a.slug) - priorityOrder.indexOf(b.slug))
+)
 const loading = ref(true)
 const showForm = ref(false)
 const selectedTicket = ref<any>(null)
@@ -21,9 +31,9 @@ onMounted(async () => {
     getStatusTerms().catch(() => []) as Promise<any[]>,
     getPriorityTerms().catch(() => []) as Promise<any[]>,
   ])
-  // Set form defaults to first term in each taxonomy
-  form.status_id = statusTerms.value[0]?.id ?? 0
-  form.priority_id = priorityTerms.value[0]?.id ?? 0
+  // Set form defaults to first term in sorted order
+  form.status_id = sortedStatusTerms.value[0]?.id ?? 0
+  form.priority_id = sortedPriorityTerms.value[0]?.id ?? 0
   loading.value = false
 })
 
@@ -47,7 +57,7 @@ async function submit() {
   })
   tickets.value = await getTickets() as any[]
   showForm.value = false
-  Object.assign(form, { title: '', status_id: statusTerms.value[0]?.id ?? 0, priority_id: priorityTerms.value[0]?.id ?? 0, assigned_member: '', project: '' })
+  Object.assign(form, { title: '', status_id: sortedStatusTerms.value[0]?.id ?? 0, priority_id: sortedPriorityTerms.value[0]?.id ?? 0, assigned_member: '', project: '' })
 }
 
 function onTicketUpdated(updated: any) {
@@ -179,10 +189,10 @@ const priorityLabel: Record<string, string> = {
               style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
             <div class="flex gap-3">
               <select v-model.number="form.status_id" class="flex-1 px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
-                <option v-for="t in statusTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
+                <option v-for="t in sortedStatusTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
               </select>
               <select v-model.number="form.priority_id" class="flex-1 px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
-                <option v-for="t in priorityTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
+                <option v-for="t in sortedPriorityTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
               </select>
             </div>
             <select v-model="form.assigned_member" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
