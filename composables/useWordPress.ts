@@ -24,6 +24,10 @@ export function useWordPress() {
   const updateTicket = (id: number, data: Record<string, unknown>) => wpFetch(`/wp-json/wp/v2/ticket/${id}`, { method: 'POST', body: JSON.stringify(data) })
   const deleteTicket = (id: number) => wpFetch(`/wp-json/wp/v2/ticket/${id}`, { method: 'DELETE' })
 
+  // Ticket taxonomy terms
+  const getStatusTerms = () => wpFetch<{ id: number; name: string; slug: string }[]>('/wp-json/wp/v2/ticket_status?per_page=100')
+  const getPriorityTerms = () => wpFetch<{ id: number; name: string; slug: string }[]>('/wp-json/wp/v2/ticket_priority?per_page=100')
+
   // Projects (CPT: project)
   const getProjects = (params = '') => wpFetch(`/wp-json/wp/v2/project?per_page=100&${params}`)
   const getProject = (id: number) => wpFetch(`/wp-json/wp/v2/project/${id}`)
@@ -101,6 +105,7 @@ export function useWordPress() {
   return {
     setToken,
     getTickets, getTicket, createTicket, updateTicket, deleteTicket,
+    getStatusTerms, getPriorityTerms,
     getProjects, getProject, createProject, updateProject,
     getCustomers, getCustomer, createCustomer,
     getMembers, createMember, updateMember,

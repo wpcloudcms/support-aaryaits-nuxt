@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const props = defineProps<{ ticket: any; members: any[]; projects: any[] }>()
+interface Term { id: number; name: string; slug: string }
+const props = defineProps<{ ticket: any; members: any[]; projects: any[]; statusTerms: Term[]; priorityTerms: Term[] }>()
 const emit = defineEmits<{ close: []; updated: [ticket: any] }>()
 
 const { updateTicket, getHistory, saveHistory, getComments, addComment, getTicketNotifyStatus, subscribeTicketNotify, unsubscribeTicketNotify } = useWordPress()
@@ -8,15 +9,15 @@ const { isSubscribed: pushSubscribed, isSupported: pushSupported, subscribe: sub
 
 const form = reactive({
   title: '',
-  status: '',
-  priority: '',
+  status_id: 0,
+  priority_id: 0,
   assigned_member: '',
   project: '',
   content: '',
 })
 
 // Snapshot for change detection
-const snapshot = reactive({ title: '', status: '', priority: '', assigned_member: '', project: '' })
+const snapshot = reactive({ title: '', status_id: 0, priority_id: 0, assigned_member: '', project: '' })
 
 // ── Per-ticket notification subscription ─────────────────────
 const ticketSubscribed = ref(false)
@@ -49,13 +50,13 @@ async function toggleTicketNotify() {
 watch(() => props.ticket, (t) => {
   if (!t) return
   form.title = t.title?.rendered ?? t.title ?? ''
-  form.status = t.meta?.status ?? 'todo'
-  form.priority = t.meta?.priority ?? 'medium'
+  form.status_id = t.ticket_status?.[0] ?? props.statusTerms[0]?.id ?? 0
+  form.priority_id = t.ticket_priority?.[0] ?? props.priorityTerms[0]?.id ?? 0
   form.assigned_member = t.meta_box?.assigned_member ?? ''
   form.project = t.meta_box?.project ?? ''
   form.content = t.content?.raw ?? ''
   Object.assign(snapshot, {
-    title: form.title, status: form.status, priority: form.priority,
+    title: form.title, status_id: form.status_id, priority_id: form.priority_id,
     assigned_member: form.assigned_member, project: form.project,
   })
   loadHistory()
@@ -70,10 +71,16 @@ function detectChanges() {
   const changes: string[] = []
   if (form.title !== snapshot.title)
     changes.push(`Title: "${snapshot.title}" → "${form.title}"`)
-  if (form.status !== snapshot.status)
-    changes.push(`Status: ${snapshot.status} → ${form.status}`)
-  if (form.priority !== snapshot.priority)
-    changes.push(`Priority: ${snapshot.priority} → ${form.priority}`)
+  if (form.status_id !== snapshot.status_id) {
+    const oldName = props.statusTerms.find(t => t.id === snapshot.status_id)?.name ?? snapshot.status_id
+    const newName = props.statusTerms.find(t => t.id === form.status_id)?.name ?? form.status_id
+    changes.push(`Status: ${oldName} → ${newName}`)
+  }
+  if (form.priority_id !== snapshot.priority_id) {
+    const oldName = props.priorityTerms.find(t => t.id === snapshot.priority_id)?.name ?? snapshot.priority_id
+    const newName = props.priorityTerms.find(t => t.id === form.priority_id)?.name ?? form.priority_id
+    changes.push(`Priority: ${oldName} → ${newName}`)
+  }
 
   const oldMember = props.members.find(m => String(m.id) === String(snapshot.assigned_member))
   const newMember = props.members.find(m => String(m.id) === String(form.assigned_member))
@@ -94,8 +101,9 @@ async function save() {
   const updated = await updateTicket(props.ticket.id, {
     title: form.title,
     content: form.content,
-    meta: { status: form.status, priority: form.priority },
     meta_box: { assigned_member: form.assigned_member, project: form.project },
+    ...(form.status_id ? { ticket_status: [form.status_id] } : {}),
+    ...(form.priority_id ? { ticket_priority: [form.priority_id] } : {}),
   })
   saving.value = false
   emit('updated', updated)
@@ -110,7 +118,7 @@ async function save() {
   }
 
   Object.assign(snapshot, {
-    title: form.title, status: form.status, priority: form.priority,
+    title: form.title, status_id: form.status_id, priority_id: form.priority_id,
     assigned_member: form.assigned_member, project: form.project,
   })
 }
@@ -227,23 +235,16 @@ function userInitial(name: string) {
       <div class="flex gap-3">
         <div class="flex-1">
           <p class="text-xs mb-1.5" style="color: var(--text-3)">Status</p>
-          <select v-model="form.status" class="w-full px-3 py-1.5 rounded-lg border text-xs"
+          <select v-model.number="form.status_id" class="w-full px-3 py-1.5 rounded-lg border text-xs"
             style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
-            <option value="todo">Todo</option>
-            <option value="in-progress">In Progress</option>
-            <option value="in-review">In Review</option>
-            <option value="done">Done</option>
-            <option value="cancelled">Cancelled</option>
+            <option v-for="t in statusTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
         </div>
         <div class="flex-1">
           <p class="text-xs mb-1.5" style="color: var(--text-3)">Priority</p>
-          <select v-model="form.priority" class="w-full px-3 py-1.5 rounded-lg border text-xs"
+          <select v-model.number="form.priority_id" class="w-full px-3 py-1.5 rounded-lg border text-xs"
             style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
-            <option value="urgent">Urgent</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
+            <option v-for="t in priorityTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
         </div>
       </div>

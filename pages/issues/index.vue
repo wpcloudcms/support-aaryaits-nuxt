@@ -1,35 +1,53 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
-const { getTickets, createTicket, getMembers, getProjects } = useWordPress()
+const { getTickets, createTicket, getMembers, getProjects, getStatusTerms, getPriorityTerms } = useWordPress()
 
 const tickets = ref<any[]>([])
 const members = ref<any[]>([])
 const projects = ref<any[]>([])
+const statusTerms = ref<{ id: number; name: string; slug: string }[]>([])
+const priorityTerms = ref<{ id: number; name: string; slug: string }[]>([])
 const loading = ref(true)
 const showForm = ref(false)
 const selectedTicket = ref<any>(null)
-const form = reactive({ title: '', status: 'todo', priority: 'medium', assigned_member: '', project: '' })
+const form = reactive({ title: '', status_id: 0, priority_id: 0, assigned_member: '', project: '' })
 
 onMounted(async () => {
-  ;[tickets.value, members.value, projects.value] = await Promise.all([
+  ;[tickets.value, members.value, projects.value, statusTerms.value, priorityTerms.value] = await Promise.all([
     getTickets() as Promise<any[]>,
     getMembers() as Promise<any[]>,
     getProjects() as Promise<any[]>,
+    getStatusTerms() as Promise<any[]>,
+    getPriorityTerms() as Promise<any[]>,
   ])
+  // Set form defaults to first term in each taxonomy
+  form.status_id = statusTerms.value[0]?.id ?? 0
+  form.priority_id = priorityTerms.value[0]?.id ?? 0
   loading.value = false
 })
+
+// Helper: get slug from ticket taxonomy term ID
+function statusSlug(ticket: any) {
+  const id = ticket.ticket_status?.[0]
+  return statusTerms.value.find(t => t.id === id)?.slug ?? ''
+}
+function prioritySlug(ticket: any) {
+  const id = ticket.ticket_priority?.[0]
+  return priorityTerms.value.find(t => t.id === id)?.slug ?? ''
+}
 
 async function submit() {
   await createTicket({
     title: form.title,
     status: 'publish',
     meta_box: { assigned_member: form.assigned_member || '', project: form.project || '' },
-    meta: { status: form.status, priority: form.priority },
+    ...(form.status_id ? { ticket_status: [form.status_id] } : {}),
+    ...(form.priority_id ? { ticket_priority: [form.priority_id] } : {}),
   })
   tickets.value = await getTickets() as any[]
   showForm.value = false
-  Object.assign(form, { title: '', status: 'todo', priority: 'medium', assigned_member: '', project: '' })
+  Object.assign(form, { title: '', status_id: statusTerms.value[0]?.id ?? 0, priority_id: priorityTerms.value[0]?.id ?? 0, assigned_member: '', project: '' })
 }
 
 function onTicketUpdated(updated: any) {
@@ -92,19 +110,19 @@ const priorityLabel: Record<string, string> = {
         class="flex items-center gap-3 px-5 py-2.5 border-b text-sm hover:bg-[var(--bg-hover)] cursor-pointer"
         style="border-color: var(--border); color: var(--text-1)"
       >
-        <span class="status-icon shrink-0" :class="statusClass[ticket.meta?.status ?? 'todo']" />
+        <span class="status-icon shrink-0" :class="statusClass[statusSlug(ticket)]" />
         <span class="flex-1 truncate">{{ ticket.title?.rendered ?? ticket.title }}</span>
 
         <!-- Status badge -->
-        <span class="text-xs px-2 py-0.5 rounded-full shrink-0 font-medium"
-          :style="{ background: statusColor[ticket.meta?.status ?? 'todo']?.bg, color: statusColor[ticket.meta?.status ?? 'todo']?.text }">
-          {{ statusLabel[ticket.meta?.status ?? 'todo'] ?? ticket.meta?.status ?? '—' }}
+        <span v-if="statusSlug(ticket)" class="text-xs px-2 py-0.5 rounded-full shrink-0 font-medium"
+          :style="{ background: statusColor[statusSlug(ticket)]?.bg ?? 'var(--bg-hover)', color: statusColor[statusSlug(ticket)]?.text ?? 'var(--text-2)' }">
+          {{ statusTerms.find(t => t.slug === statusSlug(ticket))?.name ?? statusSlug(ticket) }}
         </span>
 
         <!-- Priority badge -->
-        <span class="text-xs px-2 py-0.5 rounded-full shrink-0 font-medium"
-          :style="{ background: 'var(--bg-hover)', color: priorityColor[ticket.meta?.priority] ?? 'var(--text-2)' }">
-          {{ priorityLabel[ticket.meta?.priority] ?? ticket.meta?.priority ?? '—' }}
+        <span v-if="prioritySlug(ticket)" class="text-xs px-2 py-0.5 rounded-full shrink-0 font-medium"
+          :style="{ background: 'var(--bg-hover)', color: priorityColor[prioritySlug(ticket)] ?? 'var(--text-2)' }">
+          {{ priorityTerms.find(t => t.slug === prioritySlug(ticket))?.name ?? prioritySlug(ticket) }}
         </span>
 
         <!-- Project tag -->
@@ -131,6 +149,8 @@ const priorityLabel: Record<string, string> = {
         :ticket="selectedTicket"
         :members="members"
         :projects="projects"
+        :status-terms="statusTerms"
+        :priority-terms="priorityTerms"
         @close="selectedTicket = null"
         @updated="onTicketUpdated"
       />
@@ -146,18 +166,11 @@ const priorityLabel: Record<string, string> = {
               class="w-full px-3 py-2 rounded-lg border text-sm"
               style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
             <div class="flex gap-3">
-              <select v-model="form.status" class="flex-1 px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
-                <option value="todo">Todo</option>
-                <option value="in-progress">In Progress</option>
-                <option value="in-review">In Review</option>
-                <option value="done">Done</option>
-                <option value="cancelled">Cancelled</option>
+              <select v-model.number="form.status_id" class="flex-1 px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
+                <option v-for="t in statusTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
               </select>
-              <select v-model="form.priority" class="flex-1 px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
-                <option value="urgent">Urgent</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
+              <select v-model.number="form.priority_id" class="flex-1 px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
+                <option v-for="t in priorityTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
               </select>
             </div>
             <select v-model="form.assigned_member" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
