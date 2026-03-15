@@ -276,9 +276,7 @@ function userInitial(name: string) {
       <!-- Description -->
       <div>
         <p class="text-xs mb-1.5" style="color: var(--text-3)">Description</p>
-        <textarea v-model="form.content" rows="5" placeholder="Add a description…"
-          class="w-full px-3 py-2 rounded-lg border text-xs resize-none outline-none focus:border-[var(--accent)]"
-          style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+        <TipTapEditor v-model="form.content" placeholder="Add a description…" />
       </div>
 
       <!-- Comments -->
