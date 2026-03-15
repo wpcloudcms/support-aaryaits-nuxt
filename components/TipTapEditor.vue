@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
+import TextAlign from '@tiptap/extension-text-align'
 
 const props = defineProps<{ modelValue: string; placeholder?: string }>()
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
@@ -15,6 +16,7 @@ const editor = useEditor({
     Placeholder.configure({ placeholder: props.placeholder ?? 'Add a description…' }),
     Image.configure({ inline: false, allowBase64: true }),
     Link.configure({ openOnClick: false, HTMLAttributes: { class: 'tiptap-link' } }),
+    TextAlign.configure({ types: ['heading', 'paragraph'] }),
   ],
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
@@ -132,6 +134,24 @@ async function onImageFileChange(e: Event) {
         :class="editor?.isActive('codeBlock') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
         class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Code block">
         <Icon name="lucide:code-2" class="w-3.5 h-3.5" /></button>
+      <span class="w-px h-4 mx-1" style="background: var(--border)" />
+      <!-- Alignment -->
+      <button type="button" @click="editor?.chain().focus().setTextAlign('left').run()"
+        :class="editor?.isActive({ textAlign: 'left' }) ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Align left">
+        <Icon name="lucide:align-left" class="w-3.5 h-3.5" /></button>
+      <button type="button" @click="editor?.chain().focus().setTextAlign('center').run()"
+        :class="editor?.isActive({ textAlign: 'center' }) ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Align center">
+        <Icon name="lucide:align-center" class="w-3.5 h-3.5" /></button>
+      <button type="button" @click="editor?.chain().focus().setTextAlign('right').run()"
+        :class="editor?.isActive({ textAlign: 'right' }) ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Align right">
+        <Icon name="lucide:align-right" class="w-3.5 h-3.5" /></button>
+      <button type="button" @click="editor?.chain().focus().setTextAlign('justify').run()"
+        :class="editor?.isActive({ textAlign: 'justify' }) ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Align justify">
+        <Icon name="lucide:align-justify" class="w-3.5 h-3.5" /></button>
       <span class="w-px h-4 mx-1" style="background: var(--border)" />
       <!-- Link -->
       <button type="button" @click="openLinkDialog"
