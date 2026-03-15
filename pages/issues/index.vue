@@ -23,6 +23,9 @@ const showForm = ref(false)
 const selectedTicket = ref<any>(null)
 const form = reactive({ title: '', status_id: 0, priority_id: 0, assigned_member: '', project: '' })
 
+const route = useRoute()
+const router = useRouter()
+
 onMounted(async () => {
   ;[tickets.value, members.value, projects.value, statusTerms.value, priorityTerms.value] = await Promise.all([
     getTickets().catch(() => []) as Promise<any[]>,
@@ -35,6 +38,13 @@ onMounted(async () => {
   form.status_id = sortedStatusTerms.value[0]?.id ?? 0
   form.priority_id = sortedPriorityTerms.value[0]?.id ?? 0
   loading.value = false
+
+  // Deep-link: auto-open ticket if ?ticket=ID is in URL
+  const ticketId = route.query.ticket ? Number(route.query.ticket) : null
+  if (ticketId) {
+    const found = tickets.value.find((t: any) => t.id === ticketId)
+    if (found) selectedTicket.value = found
+  }
 })
 
 // Helper: get slug from ticket taxonomy term ID
@@ -126,7 +136,7 @@ const priorityLabel: Record<string, string> = {
       <div v-if="loading" class="p-8 text-center text-sm" style="color: var(--text-3)">Loading…</div>
       <div
         v-for="ticket in tickets" :key="ticket.id"
-        @click="selectedTicket = ticket"
+        @click="selectedTicket = ticket; router.replace({ query: { ticket: ticket.id } })"
         class="grid items-center px-5 py-2.5 border-b text-sm hover:bg-[var(--bg-hover)] cursor-pointer"
         style="grid-template-columns: 16px 1fr 110px 80px 110px 20px; gap: 12px; border-color: var(--border); color: var(--text-1)"
       >
@@ -173,7 +183,7 @@ const priorityLabel: Record<string, string> = {
         :projects="projects"
         :status-terms="statusTerms"
         :priority-terms="priorityTerms"
-        @close="selectedTicket = null"
+        @close="selectedTicket = null; router.replace({ query: {} })"
         @updated="onTicketUpdated"
       />
     </Teleport>
