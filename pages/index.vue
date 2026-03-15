@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
-const { getTickets, getMembers, getProjects, getStatusTerms, getPriorityTerms } = useWordPress()
+const { getTickets, createTicket, getMembers, getProjects, getStatusTerms, getPriorityTerms } = useWordPress()
 const { currentUser } = useAuth()
 
 const allTickets = ref<any[]>([])
@@ -11,6 +11,10 @@ const statusTerms = ref<{ id: number; name: string; slug: string }[]>([])
 const priorityTerms = ref<{ id: number; name: string; slug: string }[]>([])
 const loading = ref(true)
 const selectedTicket = ref<any>(null)
+const showForm = ref(false)
+const sortedStatusTerms = computed(() => [...statusTerms.value].sort((a, b) => ['backlog','todo','in-progress','in-review','done','cancelled'].indexOf(a.slug) - ['backlog','todo','in-progress','in-review','done','cancelled'].indexOf(b.slug)))
+const sortedPriorityTerms = computed(() => [...priorityTerms.value].sort((a, b) => ['urgent','high','medium','low'].indexOf(a.slug) - ['urgent','high','medium','low'].indexOf(b.slug)))
+const form = reactive({ title: '', status_id: 0, priority_id: 0, assigned_member: '', project: '' })
 
 const route = useRoute()
 const router = useRouter()
@@ -32,6 +36,8 @@ onMounted(async () => {
     getStatusTerms().catch(() => []) as Promise<any[]>,
     getPriorityTerms().catch(() => []) as Promise<any[]>,
   ])
+  form.status_id = sortedStatusTerms.value[0]?.id ?? 0
+  form.priority_id = sortedPriorityTerms.value[0]?.id ?? 0
   loading.value = false
 
   // Deep-link: auto-open ticket if ?ticket=ID is in URL
@@ -49,6 +55,19 @@ function statusSlug(ticket: any) {
 function prioritySlug(ticket: any) {
   const id = ticket['ticket-priority']?.[0]
   return priorityTerms.value.find(t => t.id === id)?.slug ?? ''
+}
+
+async function submit() {
+  await createTicket({
+    title: form.title,
+    status: 'publish',
+    meta_box: { assigned_member: form.assigned_member || '', project: form.project || '' },
+    ...(form.status_id ? { 'ticket-status': [form.status_id] } : {}),
+    ...(form.priority_id ? { 'ticket-priority': [form.priority_id] } : {}),
+  })
+  allTickets.value = await getTickets() as any[]
+  showForm.value = false
+  Object.assign(form, { title: '', status_id: sortedStatusTerms.value[0]?.id ?? 0, priority_id: sortedPriorityTerms.value[0]?.id ?? 0, assigned_member: '', project: '' })
 }
 
 function onTicketUpdated(updated: any) {
@@ -89,8 +108,11 @@ const priorityColor: Record<string, string> = {
 
 <template>
   <div class="flex flex-col h-full overflow-hidden">
-    <div class="flex items-center h-12 px-5 border-b shrink-0" style="border-color: var(--border)">
+    <div class="flex items-center justify-between h-12 px-5 border-b shrink-0" style="border-color: var(--border)">
       <h1 class="text-sm font-semibold" style="color: var(--text-1)">My Tickets</h1>
+      <button @click="showForm = true" class="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-white" style="background: var(--accent)">
+        <Icon name="lucide:plus" class="w-3.5 h-3.5" /> New Ticket
+      </button>
     </div>
 
     <!-- Column header -->
@@ -152,6 +174,40 @@ const priorityColor: Record<string, string> = {
         @close="selectedTicket = null; router.replace({ query: {} })"
         @updated="onTicketUpdated"
       />
+    </Teleport>
+
+    <!-- New Ticket modal -->
+    <Teleport to="body">
+      <div v-if="showForm" class="fixed inset-0 flex items-center justify-center z-50" style="background: rgba(0,0,0,0.5)">
+        <div class="w-full max-w-md rounded-xl border p-6 space-y-4" style="background: var(--bg-card); border-color: var(--border)">
+          <h2 class="text-sm font-semibold" style="color: var(--text-1)">New Ticket</h2>
+          <form @submit.prevent="submit" class="space-y-3">
+            <input v-model="form.title" placeholder="Ticket title" required
+              class="w-full px-3 py-2 rounded-lg border text-sm"
+              style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+            <div class="flex gap-3">
+              <select v-model.number="form.status_id" class="flex-1 px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
+                <option v-for="t in sortedStatusTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
+              </select>
+              <select v-model.number="form.priority_id" class="flex-1 px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
+                <option v-for="t in sortedPriorityTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
+              </select>
+            </div>
+            <select v-model="form.assigned_member" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
+              <option value="">Unassigned</option>
+              <option v-for="m in members" :key="m.id" :value="String(m.id)">{{ m.title?.rendered ?? m.title }}</option>
+            </select>
+            <select v-model="form.project" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
+              <option value="">No project</option>
+              <option v-for="p in projects" :key="p.id" :value="String(p.id)">{{ p.title?.rendered ?? p.title }}</option>
+            </select>
+            <div class="flex justify-end gap-2 pt-1">
+              <button type="button" @click="showForm = false" class="px-4 py-1.5 rounded-lg border text-xs" style="border-color: var(--border); color: var(--text-2)">Cancel</button>
+              <button type="submit" class="px-4 py-1.5 rounded-lg text-xs text-white" style="background: var(--accent)">Create</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </Teleport>
   </div>
 </template>
