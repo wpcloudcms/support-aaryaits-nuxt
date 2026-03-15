@@ -144,7 +144,10 @@ const priorityLabel: Record<string, string> = {
         <span class="status-icon shrink-0" :class="statusClass[statusSlug(ticket)]" />
 
         <!-- Title -->
-        <span class="truncate">{{ ticket.title?.rendered ?? ticket.title }}</span>
+        <span class="truncate flex items-center gap-1.5">
+          <span class="shrink-0 text-xs font-mono" style="color: var(--text-3)">#{{ ticket.id }}</span>
+          {{ ticket.title?.rendered ?? ticket.title }}
+        </span>
 
         <!-- Status column -->
         <span class="text-xs font-medium truncate"

@@ -135,7 +135,10 @@ const priorityColor: Record<string, string> = {
         style="grid-template-columns: 16px 1fr 110px 80px 110px 120px; gap: 12px; border-color: var(--border); color: var(--text-1)"
       >
         <span class="status-icon shrink-0" :class="statusClass[statusSlug(ticket)]" />
-        <span class="truncate">{{ ticket.title?.rendered ?? ticket.title }}</span>
+        <span class="truncate flex items-center gap-1.5">
+          <span class="shrink-0 text-xs font-mono" style="color: var(--text-3)">#{{ ticket.id }}</span>
+          {{ ticket.title?.rendered ?? ticket.title }}
+        </span>
         <span class="text-xs font-medium truncate"
           :style="{ color: statusColor[statusSlug(ticket)]?.text ?? 'var(--text-3)' }">
           {{ statusTerms.find(t => t.slug === statusSlug(ticket))?.name ?? '—' }}
