@@ -172,7 +172,7 @@ async function onImageFileChange(e: Event) {
     </div>
 
     <!-- Editor area -->
-    <div class="px-3 py-2.5">
+    <div class="px-3 py-2.5" style="background: #ffffff">
       <EditorContent :editor="editor" />
     </div>
 
