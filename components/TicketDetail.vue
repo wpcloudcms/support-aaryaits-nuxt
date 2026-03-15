@@ -54,7 +54,7 @@ watch(() => props.ticket, (t) => {
   form.priority_id = t['ticket-priority']?.[0] ?? props.priorityTerms[0]?.id ?? 0
   form.assigned_member = t.meta_box?.assigned_member ?? ''
   form.project = t.meta_box?.project ?? ''
-  form.content = t.content?.raw ?? ''
+  form.content = t.content?.raw ?? t.content?.rendered ?? ''
   Object.assign(snapshot, {
     title: form.title, status_id: form.status_id, priority_id: form.priority_id,
     assigned_member: form.assigned_member, project: form.project,

@@ -18,8 +18,8 @@ export function useWordPress() {
   }
 
   // Tickets (CPT: ticket)
-  const getTickets = (params = '') => wpFetch(`/wp-json/wp/v2/ticket?per_page=100&${params}`)
-  const getTicket = (id: number) => wpFetch(`/wp-json/wp/v2/ticket/${id}`)
+  const getTickets = (params = '') => wpFetch(`/wp-json/wp/v2/ticket?per_page=100&context=edit&${params}`)
+  const getTicket = (id: number) => wpFetch(`/wp-json/wp/v2/ticket/${id}?context=edit`)
   const createTicket = (data: Record<string, unknown>) => wpFetch('/wp-json/wp/v2/ticket', { method: 'POST', body: JSON.stringify(data) })
   const updateTicket = (id: number, data: Record<string, unknown>) => wpFetch(`/wp-json/wp/v2/ticket/${id}`, { method: 'POST', body: JSON.stringify(data) })
   const deleteTicket = (id: number) => wpFetch(`/wp-json/wp/v2/ticket/${id}`, { method: 'DELETE' })
