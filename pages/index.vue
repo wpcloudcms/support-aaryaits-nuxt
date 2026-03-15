@@ -18,7 +18,7 @@ const router = useRouter()
 // Filter tickets assigned to the current logged-in member
 const tickets = computed(() => {
   const myMember = members.value.find(m =>
-    (m.title?.rendered ?? m.title ?? '').trim() === (currentUser?.name ?? '').trim()
+    (m.title?.rendered ?? m.title ?? '').trim() === (currentUser.value?.name ?? '').trim()
   )
   if (!myMember) return []
   return allTickets.value.filter(t => String(t.meta_box?.assigned_member) === String(myMember.id))
