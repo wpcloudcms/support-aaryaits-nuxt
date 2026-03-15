@@ -290,17 +290,28 @@ function userInitial(name: string) {
 
         <!-- Comment list -->
         <div v-if="comments.length > 0" class="space-y-3 mb-4">
-          <div v-for="(c, i) in comments" :key="i" class="flex gap-2.5">
+          <div v-for="(c, i) in comments" :key="i"
+            :class="c.user === currentUser.value?.name ? 'flex-row-reverse' : ''"
+            class="flex gap-2.5">
             <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-0.5"
-              style="background: var(--accent)">
+              :style="c.user === currentUser.value?.name ? 'background: var(--accent)' : 'background: #6b7280'">
               {{ userInitial(c.user) }}
             </div>
-            <div class="flex-1 rounded-lg p-2.5 text-xs" style="background: var(--bg-app)">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-medium" style="color: var(--text-1)">{{ c.user }}</span>
-                <span style="color: var(--text-3)">{{ c.timestamp }}</span>
+            <div class="max-w-[75%] rounded-lg p-2.5 text-xs"
+              :style="c.user === currentUser.value?.name
+                ? 'background: var(--accent); color: #fff'
+                : 'background: var(--bg-app); color: var(--text-2)'">
+              <div class="flex items-center justify-between gap-4 mb-1">
+                <span class="font-medium"
+                  :style="c.user === currentUser.value?.name ? 'color: rgba(255,255,255,0.85)' : 'color: var(--text-1)'">
+                  {{ c.user }}
+                </span>
+                <span class="text-[10px] shrink-0"
+                  :style="c.user === currentUser.value?.name ? 'color: rgba(255,255,255,0.65)' : 'color: var(--text-3)'">
+                  {{ c.timestamp }}
+                </span>
               </div>
-              <p style="color: var(--text-2); white-space: pre-wrap">{{ c.body }}</p>
+              <p style="white-space: pre-wrap">{{ c.body }}</p>
             </div>
           </div>
         </div>
