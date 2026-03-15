@@ -4,6 +4,7 @@ const { logoUrl, siteName, sidebarWidth, loadSiteSettings } = useSiteSettings()
 const route = useRoute()
 const collapsed = ref(false)
 const dark = ref(false)
+const showUserMenu = ref(false)
 
 function toggleDark() {
   dark.value = !dark.value
@@ -17,7 +18,6 @@ const navItems = [
   { label: 'Projects',    icon: 'lucide:folder',           to: '/projects' },
   { label: 'Customers',   icon: 'lucide:building-2',       to: '/customers' },
   { label: 'Members',     icon: 'lucide:users',            to: '/members' },
-  { label: 'Settings',    icon: 'lucide:settings',         to: '/settings' },
 ]
 
 // ── Notifications ─────────────────────────────────────────────
@@ -88,16 +88,19 @@ function userInitial(name: string) {
         </NuxtLink>
       </nav>
 
-      <!-- Footer -->
-      <div class="px-1 pb-2 space-y-0.5 border-t pt-2 shrink-0" style="border-color: var(--border)">
-        <button @click="toggleDark" class="flex items-center gap-2.5 w-full px-2 py-1.5 rounded text-xs hover:bg-[var(--bg-hover)]" style="color: var(--text-2)">
-          <Icon :name="dark ? 'lucide:sun' : 'lucide:moon'" class="w-4 h-4 shrink-0" />
-          <span v-if="!collapsed">{{ dark ? 'Light mode' : 'Dark mode' }}</span>
-        </button>
-        <button @click="logout" class="flex items-center gap-2.5 w-full px-2 py-1.5 rounded text-xs hover:bg-[var(--bg-hover)]" style="color: var(--text-2)">
-          <Icon name="lucide:log-out" class="w-4 h-4 shrink-0" />
-          <span v-if="!collapsed">Sign out</span>
-        </button>
+      <!-- Footer: Settings at bottom -->
+      <div class="px-1 pb-2 border-t pt-2 shrink-0" style="border-color: var(--border)">
+        <NuxtLink
+          to="/settings"
+          class="flex items-center gap-2.5 px-2 py-1.5 rounded text-xs font-medium transition-colors"
+          :class="route.path === '/settings'
+            ? 'text-[var(--accent)]'
+            : 'text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--bg-hover)]'"
+          :style="route.path === '/settings' ? 'background: var(--bg-active)' : ''"
+        >
+          <Icon name="lucide:settings" class="w-4 h-4 shrink-0" />
+          <span v-if="!collapsed">Settings</span>
+        </NuxtLink>
       </div>
     </aside>
 
@@ -107,6 +110,14 @@ function userInitial(name: string) {
       <!-- Top bar -->
       <div class="flex items-center justify-end gap-2 h-10 px-4 border-b shrink-0"
         style="background: var(--bg-sidebar); border-color: var(--border)">
+
+        <!-- Dark mode toggle -->
+        <button @click="toggleDark"
+          class="p-1.5 rounded hover:bg-[var(--bg-hover)]"
+          :title="dark ? 'Switch to light mode' : 'Switch to dark mode'"
+          style="color: var(--text-2)">
+          <Icon :name="dark ? 'lucide:sun' : 'lucide:moon'" class="w-4 h-4" />
+        </button>
 
         <!-- Notification bell -->
         <div class="relative">
@@ -128,13 +139,33 @@ function userInitial(name: string) {
           </button>
         </div>
 
-        <!-- User avatar -->
-        <div class="flex items-center gap-1.5">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
-            style="background: var(--accent)">
-            {{ userInitial(currentUser?.name ?? '') }}
+        <!-- User avatar + dropdown -->
+        <div class="relative">
+          <button
+            @click="showUserMenu = !showUserMenu"
+            class="flex items-center gap-1.5 px-1.5 py-1 rounded hover:bg-[var(--bg-hover)]"
+          >
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+              style="background: var(--accent)">
+              {{ userInitial(currentUser?.name ?? '') }}
+            </div>
+            <span class="text-xs hidden sm:block" style="color: var(--text-2)">{{ currentUser?.name }}</span>
+            <Icon name="lucide:chevron-down" class="w-3 h-3 hidden sm:block" style="color: var(--text-3)" />
+          </button>
+
+          <!-- Dropdown -->
+          <div v-if="showUserMenu"
+            class="absolute right-0 top-full mt-1 w-36 rounded-lg border shadow-lg z-50 overflow-hidden"
+            style="background: var(--bg-card); border-color: var(--border)">
+            <button @click="logout(); showUserMenu = false"
+              class="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-[var(--bg-hover)]"
+              style="color: var(--text-2)">
+              <Icon name="lucide:log-out" class="w-3.5 h-3.5" />
+              Sign out
+            </button>
           </div>
-          <span class="text-xs hidden sm:block" style="color: var(--text-2)">{{ currentUser?.name }}</span>
+          <!-- Click outside to close -->
+          <div v-if="showUserMenu" class="fixed inset-0 z-40" @click="showUserMenu = false" />
         </div>
       </div>
 
