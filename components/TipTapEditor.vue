@@ -2,6 +2,8 @@
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
+import Image from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
 
 const props = defineProps<{ modelValue: string; placeholder?: string }>()
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
@@ -11,6 +13,8 @@ const editor = useEditor({
   extensions: [
     StarterKit,
     Placeholder.configure({ placeholder: props.placeholder ?? 'Add a description…' }),
+    Image.configure({ inline: false, allowBase64: true }),
+    Link.configure({ openOnClick: false, HTMLAttributes: { class: 'tiptap-link' } }),
   ],
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
@@ -29,6 +33,64 @@ watch(() => props.modelValue, (val) => {
 })
 
 onBeforeUnmount(() => editor.value?.destroy())
+
+// ── Link dialog ───────────────────────────────────────────────
+const showLinkDialog = ref(false)
+const linkUrl = ref('')
+
+function openLinkDialog() {
+  const existing = editor.value?.getAttributes('link').href ?? ''
+  linkUrl.value = existing
+  showLinkDialog.value = true
+}
+
+function applyLink() {
+  if (!linkUrl.value.trim()) {
+    editor.value?.chain().focus().unsetLink().run()
+  } else {
+    editor.value?.chain().focus().setLink({ href: linkUrl.value.trim() }).run()
+  }
+  showLinkDialog.value = false
+  linkUrl.value = ''
+}
+
+// ── Image dialog ──────────────────────────────────────────────
+const showImageDialog = ref(false)
+const imageUrl = ref('')
+const imageUploading = ref(false)
+const { uploadImage } = useWordPress()
+
+function openImageDialog() {
+  showImageDialog.value = true
+  imageUrl.value = ''
+}
+
+function applyImageUrl() {
+  if (imageUrl.value.trim()) {
+    editor.value?.chain().focus().setImage({ src: imageUrl.value.trim() }).run()
+  }
+  showImageDialog.value = false
+  imageUrl.value = ''
+}
+
+async function onImageFileChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  imageUploading.value = true
+  const reader = new FileReader()
+  reader.onload = async () => {
+    try {
+      const res = await uploadImage(reader.result as string)
+      editor.value?.chain().focus().setImage({ src: res.url }).run()
+    } catch {
+      // fallback: embed as base64 if upload fails
+      editor.value?.chain().focus().setImage({ src: reader.result as string }).run()
+    }
+    imageUploading.value = false
+    showImageDialog.value = false
+  }
+  reader.readAsDataURL(file)
+}
 </script>
 
 <template>
@@ -37,63 +99,98 @@ onBeforeUnmount(() => editor.value?.destroy())
     <div class="flex items-center gap-0.5 px-2 py-1.5 border-b flex-wrap" style="border-color: var(--border)">
       <button type="button" @click="editor?.chain().focus().toggleBold().run()"
         :class="editor?.isActive('bold') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs font-bold w-6 h-6 flex items-center justify-center" title="Bold">
-        B
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs font-bold w-6 h-6 flex items-center justify-center" title="Bold">B</button>
       <button type="button" @click="editor?.chain().focus().toggleItalic().run()"
         :class="editor?.isActive('italic') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs italic w-6 h-6 flex items-center justify-center" title="Italic">
-        I
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs italic w-6 h-6 flex items-center justify-center" title="Italic">I</button>
       <button type="button" @click="editor?.chain().focus().toggleStrike().run()"
         :class="editor?.isActive('strike') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs line-through w-6 h-6 flex items-center justify-center" title="Strikethrough">
-        S
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs line-through w-6 h-6 flex items-center justify-center" title="Strikethrough">S</button>
       <button type="button" @click="editor?.chain().focus().toggleCode().run()"
         :class="editor?.isActive('code') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs font-mono w-6 h-6 flex items-center justify-center" title="Inline code">
-        `
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs font-mono w-6 h-6 flex items-center justify-center" title="Inline code">`</button>
       <span class="w-px h-4 mx-1" style="background: var(--border)" />
       <button type="button" @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
         :class="editor?.isActive('heading', { level: 2 }) ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs w-6 h-6 flex items-center justify-center font-semibold" title="Heading">
-        H
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs font-semibold w-6 h-6 flex items-center justify-center" title="Heading">H</button>
       <button type="button" @click="editor?.chain().focus().toggleBulletList().run()"
         :class="editor?.isActive('bulletList') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs w-6 h-6 flex items-center justify-center" title="Bullet list">
-        <Icon name="lucide:list" class="w-3.5 h-3.5" />
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Bullet list">
+        <Icon name="lucide:list" class="w-3.5 h-3.5" /></button>
       <button type="button" @click="editor?.chain().focus().toggleOrderedList().run()"
         :class="editor?.isActive('orderedList') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs w-6 h-6 flex items-center justify-center" title="Numbered list">
-        <Icon name="lucide:list-ordered" class="w-3.5 h-3.5" />
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Numbered list">
+        <Icon name="lucide:list-ordered" class="w-3.5 h-3.5" /></button>
       <button type="button" @click="editor?.chain().focus().toggleBlockquote().run()"
         :class="editor?.isActive('blockquote') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs w-6 h-6 flex items-center justify-center" title="Blockquote">
-        <Icon name="lucide:quote" class="w-3.5 h-3.5" />
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Blockquote">
+        <Icon name="lucide:quote" class="w-3.5 h-3.5" /></button>
       <button type="button" @click="editor?.chain().focus().toggleCodeBlock().run()"
         :class="editor?.isActive('codeBlock') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs w-6 h-6 flex items-center justify-center font-mono" title="Code block">
-        <Icon name="lucide:code-2" class="w-3.5 h-3.5" />
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Code block">
+        <Icon name="lucide:code-2" class="w-3.5 h-3.5" /></button>
+      <span class="w-px h-4 mx-1" style="background: var(--border)" />
+      <!-- Link -->
+      <button type="button" @click="openLinkDialog"
+        :class="editor?.isActive('link') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Insert link">
+        <Icon name="lucide:link" class="w-3.5 h-3.5" /></button>
+      <!-- Image -->
+      <button type="button" @click="openImageDialog"
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" style="color: var(--text-2)" title="Insert image">
+        <Icon name="lucide:image" class="w-3.5 h-3.5" /></button>
       <span class="w-px h-4 mx-1" style="background: var(--border)" />
       <button type="button" @click="editor?.chain().focus().undo().run()"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs w-6 h-6 flex items-center justify-center" style="color: var(--text-3)" title="Undo">
-        <Icon name="lucide:undo-2" class="w-3.5 h-3.5" />
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" style="color: var(--text-3)" title="Undo">
+        <Icon name="lucide:undo-2" class="w-3.5 h-3.5" /></button>
       <button type="button" @click="editor?.chain().focus().redo().run()"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs w-6 h-6 flex items-center justify-center" style="color: var(--text-3)" title="Redo">
-        <Icon name="lucide:redo-2" class="w-3.5 h-3.5" />
-      </button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" style="color: var(--text-3)" title="Redo">
+        <Icon name="lucide:redo-2" class="w-3.5 h-3.5" /></button>
     </div>
+
     <!-- Editor area -->
     <div class="px-3 py-2.5">
       <EditorContent :editor="editor" />
+    </div>
+
+    <!-- Link dialog -->
+    <div v-if="showLinkDialog" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
+      @click.self="showLinkDialog = false">
+      <div class="rounded-xl p-4 w-80 shadow-xl" style="background: var(--bg-card); border: 1px solid var(--border)">
+        <p class="text-xs font-semibold mb-3" style="color: var(--text-1)">Insert Link</p>
+        <input v-model="linkUrl" type="url" placeholder="https://example.com" autofocus
+          class="w-full px-3 py-1.5 rounded-lg border text-xs outline-none focus:border-[var(--accent)] mb-3"
+          style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)"
+          @keydown.enter="applyLink" @keydown.esc="showLinkDialog = false" />
+        <div class="flex justify-end gap-2">
+          <button @click="showLinkDialog = false" class="px-3 py-1 rounded text-xs border"
+            style="border-color: var(--border); color: var(--text-2)">Cancel</button>
+          <button @click="applyLink" class="px-3 py-1 rounded text-xs text-white"
+            style="background: var(--accent)">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image dialog -->
+    <div v-if="showImageDialog" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
+      @click.self="showImageDialog = false">
+      <div class="rounded-xl p-4 w-80 shadow-xl" style="background: var(--bg-card); border: 1px solid var(--border)">
+        <p class="text-xs font-semibold mb-3" style="color: var(--text-1)">Insert Image</p>
+        <p class="text-xs mb-1.5" style="color: var(--text-3)">Paste a URL</p>
+        <input v-model="imageUrl" type="url" placeholder="https://example.com/image.png"
+          class="w-full px-3 py-1.5 rounded-lg border text-xs outline-none focus:border-[var(--accent)] mb-3"
+          style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)"
+          @keydown.enter="applyImageUrl" @keydown.esc="showImageDialog = false" />
+        <p class="text-xs mb-1.5" style="color: var(--text-3)">Or upload a file <span v-if="imageUploading" style="color:var(--accent)">(uploading…)</span></p>
+        <input ref="imageFileInput" type="file" accept="image/*" class="w-full text-xs mb-3" :disabled="imageUploading"
+          style="color: var(--text-2)" @change="onImageFileChange" />
+        <div class="flex justify-end gap-2">
+          <button @click="showImageDialog = false" class="px-3 py-1 rounded text-xs border"
+            style="border-color: var(--border); color: var(--text-2)">Cancel</button>
+          <button @click="applyImageUrl" :disabled="!imageUrl.trim()" class="px-3 py-1 rounded text-xs text-white disabled:opacity-50"
+            style="background: var(--accent)">Insert URL</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -116,4 +213,6 @@ onBeforeUnmount(() => editor.value?.destroy())
 .tiptap-editor-content pre code { background: none; padding: 0; color: var(--text-1); }
 .tiptap-editor-content p { color: var(--text-1); }
 .tiptap-editor-content strong { font-weight: 600; }
+.tiptap-editor-content img { max-width: 100%; border-radius: 0.5rem; margin: 0.25rem 0; }
+.tiptap-link { color: var(--accent); text-decoration: underline; cursor: pointer; }
 </style>
