@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
-const { getProjects, updateProject, createProject, getTickets, getStatusTerms, getPriorityTerms } = useWordPress()
+const { getProjects, updateProject, createProject, getTickets, getStatusTerms, getPriorityTerms, uploadImage } = useWordPress()
 const { isAdmin, currentUser } = useAuth()
 const canCreate = computed(() => isAdmin.value || currentUser.value?.roles?.includes('editor'))
 
@@ -11,12 +11,16 @@ const statusTerms = ref<{ id: number; name: string; slug: string }[]>([])
 const priorityTerms = ref<{ id: number; name: string; slug: string }[]>([])
 const showForm = ref(false)
 const selectedProject = ref<any>(null)
-const form = reactive({ name: '', description: '', color: '#5e6ad2' })
+const form = reactive({ name: '', description: '', logoPreview: '' })
 
 // URL edit form for selected project
 const urlForm = reactive({ live_url: '', live_admin_url: '', dev_url: '', dev_admin_url: '' })
 const urlSaving = ref(false)
 const urlSaved = ref(false)
+
+// Logo upload for selected project
+const logoPreview = ref('')
+const logoSaving = ref(false)
 
 onMounted(async () => {
   ;[projects.value, allTickets.value, statusTerms.value, priorityTerms.value] = await Promise.all([
@@ -29,6 +33,7 @@ onMounted(async () => {
 
 function openProject(p: any) {
   selectedProject.value = p
+  logoPreview.value = ''
   Object.assign(urlForm, {
     live_url:       p.meta?.live_url       ?? '',
     live_admin_url: p.meta?.live_admin_url ?? '',
@@ -38,6 +43,29 @@ function openProject(p: any) {
 }
 
 function closeProject() { selectedProject.value = null }
+
+function onLogoChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => { logoPreview.value = reader.result as string }
+  reader.readAsDataURL(file)
+}
+
+async function saveLogo() {
+  if (!selectedProject.value || !logoPreview.value) return
+  logoSaving.value = true
+  try {
+    const res = await uploadImage(logoPreview.value)
+    const logo = res.url
+    await updateProject(selectedProject.value.id, { meta: { logo } })
+    const idx = projects.value.findIndex(p => p.id === selectedProject.value.id)
+    if (idx !== -1) projects.value[idx] = { ...projects.value[idx], meta: { ...projects.value[idx].meta, logo } }
+    selectedProject.value = { ...selectedProject.value, meta: { ...selectedProject.value.meta, logo } }
+    logoPreview.value = ''
+  } catch {}
+  logoSaving.value = false
+}
 
 async function saveUrls() {
   if (!selectedProject.value) return
@@ -50,6 +78,14 @@ async function saveUrls() {
   urlSaved.value = true
   setTimeout(() => urlSaved.value = false, 2500)
   urlSaving.value = false
+}
+
+function onNewLogoChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => { form.logoPreview = reader.result as string }
+  reader.readAsDataURL(file)
 }
 
 const projectTickets = computed(() => {
@@ -86,17 +122,20 @@ const statusClass: Record<string, string> = {
 }
 
 async function submit() {
+  let logo = ''
+  if (form.logoPreview) {
+    const res = await uploadImage(form.logoPreview).catch(() => null)
+    if (res) logo = res.url
+  }
   await createProject({
     title: form.name,
     status: 'publish',
-    meta: { description: form.description, color: form.color },
+    meta: { description: form.description, ...(logo ? { logo } : {}) },
   })
   projects.value = await getProjects() as any[]
   showForm.value = false
-  Object.assign(form, { name: '', description: '', color: '#5e6ad2' })
+  Object.assign(form, { name: '', description: '', logoPreview: '' })
 }
-
-const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
 </script>
 
 <template>
@@ -116,8 +155,12 @@ const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
         class="rounded-xl border p-4 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
         style="background: var(--bg-card); border-color: var(--border)"
       >
-        <div class="flex items-center gap-2 mb-2">
-          <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: p.meta?.color || '#5e6ad2' }" />
+        <div class="flex items-center gap-2.5 mb-2">
+          <div class="w-8 h-8 rounded-lg border shrink-0 flex items-center justify-center overflow-hidden"
+            style="border-color: var(--border); background: var(--bg-app)">
+            <img v-if="p.meta?.logo" :src="p.meta.logo" class="w-full h-full object-contain" />
+            <Icon v-else name="lucide:folder" class="w-4 h-4" style="color: var(--text-3)" />
+          </div>
           <span class="font-medium text-sm truncate" style="color: var(--text-1)">{{ p.title?.rendered ?? p.title }}</span>
         </div>
         <p class="text-xs" style="color: var(--text-2)">{{ p.meta?.description || 'No description' }}</p>
@@ -133,8 +176,12 @@ const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
 
           <!-- Header -->
           <div class="flex items-center justify-between px-5 h-12 border-b shrink-0" style="border-color: var(--border)">
-            <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: selectedProject.meta?.color || '#5e6ad2' }" />
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg border shrink-0 flex items-center justify-center overflow-hidden"
+                style="border-color: var(--border); background: var(--bg-app)">
+                <img v-if="logoPreview || selectedProject.meta?.logo" :src="logoPreview || selectedProject.meta.logo" class="w-full h-full object-contain" />
+                <Icon v-else name="lucide:folder" class="w-4 h-4" style="color: var(--text-3)" />
+              </div>
               <span class="text-sm font-semibold truncate" style="color: var(--text-1)">{{ selectedProject.title?.rendered ?? selectedProject.title }}</span>
             </div>
             <button @click="closeProject" class="p-1 rounded hover:bg-[var(--bg-hover)]" style="color: var(--text-3)">
@@ -143,6 +190,27 @@ const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
           </div>
 
           <div class="flex-1 overflow-y-auto">
+
+            <!-- Logo section -->
+            <div v-if="canCreate" class="px-5 py-4 border-b flex items-center gap-4" style="border-color: var(--border)">
+              <div class="w-14 h-14 rounded-xl border shrink-0 flex items-center justify-center overflow-hidden"
+                style="border-color: var(--border); background: var(--bg-app)">
+                <img v-if="logoPreview || selectedProject.meta?.logo" :src="logoPreview || selectedProject.meta.logo" class="w-full h-full object-contain" />
+                <Icon v-else name="lucide:image" class="w-6 h-6" style="color: var(--text-3)" />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border cursor-pointer hover:bg-[var(--bg-hover)]"
+                  style="border-color: var(--border); color: var(--text-2)">
+                  <Icon name="lucide:upload" class="w-3.5 h-3.5" /> Choose Logo
+                  <input type="file" accept="image/*" class="sr-only" @change="onLogoChange" />
+                </label>
+                <button v-if="logoPreview" @click="saveLogo" :disabled="logoSaving"
+                  class="text-xs px-3 py-1.5 rounded-lg text-white disabled:opacity-60"
+                  style="background: var(--accent)">
+                  {{ logoSaving ? 'Saving…' : 'Save Logo' }}
+                </button>
+              </div>
+            </div>
 
             <!-- URLs section -->
             <div class="px-5 py-4 border-b" style="border-color: var(--border)">
@@ -247,13 +315,20 @@ const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
           <form @submit.prevent="submit" class="space-y-3">
             <input v-model="form.name" placeholder="Project name" required class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
             <textarea v-model="form.description" placeholder="Description (optional)" rows="2" class="w-full px-3 py-2 rounded-lg border text-sm resize-none" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
-            <div class="flex gap-2">
-              <button
-                v-for="c in COLORS" :key="c" type="button"
-                @click="form.color = c"
-                class="w-6 h-6 rounded-full border-2 transition-all"
-                :style="{ background: c, borderColor: form.color === c ? 'var(--text-1)' : 'transparent' }"
-              />
+            <!-- Logo upload -->
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-lg border flex items-center justify-center overflow-hidden shrink-0"
+                style="border-color: var(--border); background: var(--bg-app)">
+                <img v-if="form.logoPreview" :src="form.logoPreview" class="w-full h-full object-contain" />
+                <Icon v-else name="lucide:image" class="w-5 h-5" style="color: var(--text-3)" />
+              </div>
+              <label class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border cursor-pointer hover:bg-[var(--bg-hover)]"
+                style="border-color: var(--border); color: var(--text-2)">
+                <Icon name="lucide:upload" class="w-3.5 h-3.5" /> Logo
+                <input type="file" accept="image/*" class="sr-only" @change="onNewLogoChange" />
+              </label>
+              <button v-if="form.logoPreview" type="button" @click="form.logoPreview = ''"
+                class="text-xs px-2 py-1 rounded border" style="border-color: var(--border); color: var(--text-3)">Remove</button>
             </div>
             <div class="flex justify-end gap-2 pt-1">
               <button type="button" @click="showForm = false" class="px-4 py-1.5 rounded-lg border text-xs" style="border-color: var(--border); color: var(--text-2)">Cancel</button>
