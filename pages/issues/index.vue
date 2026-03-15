@@ -123,7 +123,7 @@ const priorityLabel: Record<string, string> = {
     </div>
 
     <!-- Column header -->
-    <div class="grid px-5 py-1.5 border-b text-xs font-medium shrink-0" style="grid-template-columns: 16px 1fr 110px 80px 110px 20px; gap: 12px; border-color: var(--border); color: var(--text-3)">
+    <div class="grid px-5 py-1.5 border-b text-xs font-medium shrink-0" style="grid-template-columns: 16px 1fr 110px 80px 110px 20px; gap: 12px; border-color: var(--border); color: var(--text-2)">
       <span />
       <span>Title</span>
       <span>Status</span>
