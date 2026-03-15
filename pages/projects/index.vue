@@ -1,16 +1,89 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
-const { getProjects, createProject } = useWordPress()
+const { getProjects, updateProject, createProject, getTickets, getStatusTerms, getPriorityTerms } = useWordPress()
 const { isAdmin, currentUser } = useAuth()
 const canCreate = computed(() => isAdmin.value || currentUser.value?.roles?.includes('editor'))
+
 const projects = ref<any[]>([])
+const allTickets = ref<any[]>([])
+const statusTerms = ref<{ id: number; name: string; slug: string }[]>([])
+const priorityTerms = ref<{ id: number; name: string; slug: string }[]>([])
 const showForm = ref(false)
+const selectedProject = ref<any>(null)
 const form = reactive({ name: '', description: '', color: '#5e6ad2' })
 
+// URL edit form for selected project
+const urlForm = reactive({ live_url: '', live_admin_url: '', dev_url: '', dev_admin_url: '' })
+const urlSaving = ref(false)
+const urlSaved = ref(false)
+
 onMounted(async () => {
-  projects.value = await getProjects() as any[]
+  ;[projects.value, allTickets.value, statusTerms.value, priorityTerms.value] = await Promise.all([
+    getProjects() as Promise<any[]>,
+    getTickets('context=edit') as Promise<any[]>,
+    getStatusTerms() as Promise<any[]>,
+    getPriorityTerms() as Promise<any[]>,
+  ])
 })
+
+function openProject(p: any) {
+  selectedProject.value = p
+  Object.assign(urlForm, {
+    live_url:       p.meta?.live_url       ?? '',
+    live_admin_url: p.meta?.live_admin_url ?? '',
+    dev_url:        p.meta?.dev_url        ?? '',
+    dev_admin_url:  p.meta?.dev_admin_url  ?? '',
+  })
+}
+
+function closeProject() { selectedProject.value = null }
+
+async function saveUrls() {
+  if (!selectedProject.value) return
+  urlSaving.value = true
+  await updateProject(selectedProject.value.id, { meta: { ...urlForm } }).catch(() => {})
+  // Update local cache
+  const idx = projects.value.findIndex(p => p.id === selectedProject.value.id)
+  if (idx !== -1) projects.value[idx] = { ...projects.value[idx], meta: { ...projects.value[idx].meta, ...urlForm } }
+  selectedProject.value = { ...selectedProject.value, meta: { ...selectedProject.value.meta, ...urlForm } }
+  urlSaved.value = true
+  setTimeout(() => urlSaved.value = false, 2500)
+  urlSaving.value = false
+}
+
+const projectTickets = computed(() => {
+  if (!selectedProject.value) return []
+  return allTickets.value.filter(t => String(t.meta_box?.project) === String(selectedProject.value.id))
+})
+
+function statusSlug(ticket: any) {
+  const id = ticket['ticket-status']?.[0]
+  return statusTerms.value.find(t => t.id === id)?.slug ?? ''
+}
+function statusName(ticket: any) {
+  const id = ticket['ticket-status']?.[0]
+  return statusTerms.value.find(t => t.id === id)?.name ?? '—'
+}
+function priorityName(ticket: any) {
+  const id = ticket['ticket-priority']?.[0]
+  return priorityTerms.value.find(t => t.id === id)?.name ?? '—'
+}
+function formatDate(d: string) {
+  if (!d) return '—'
+  return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const statusColor: Record<string, string> = {
+  todo: 'var(--text-2)', 'in-progress': '#e07b00', 'in-review': '#2563eb', done: '#2DB35D', cancelled: '#e53935',
+}
+const priorityColor: Record<string, string> = {
+  urgent: '#ff5e5e', high: '#f0a100', medium: '#0091ff', low: 'var(--text-2)',
+}
+const statusClass: Record<string, string> = {
+  todo: 'status-todo', 'in-progress': 'status-in-progress', 'in-review': 'status-in-review',
+  done: 'status-done', cancelled: 'status-cancelled',
+}
 
 async function submit() {
   await createProject({
@@ -39,7 +112,8 @@ const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
       <div
         v-for="p in projects"
         :key="p.id"
-        class="rounded-xl border p-4"
+        @click="openProject(p)"
+        class="rounded-xl border p-4 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
         style="background: var(--bg-card); border-color: var(--border)"
       >
         <div class="flex items-center gap-2 mb-2">
@@ -49,6 +123,121 @@ const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
         <p class="text-xs" style="color: var(--text-2)">{{ p.meta?.description || 'No description' }}</p>
       </div>
     </div>
+
+    <!-- Project Detail slide-over -->
+    <Teleport to="body">
+      <template v-if="selectedProject">
+        <div class="fixed inset-0 z-40 bg-black/30" @click="closeProject" />
+        <div class="fixed right-0 top-0 h-full w-full max-w-2xl z-50 flex flex-col shadow-2xl overflow-hidden"
+          style="background: var(--bg-card); border-left: 1px solid var(--border)">
+
+          <!-- Header -->
+          <div class="flex items-center justify-between px-5 h-12 border-b shrink-0" style="border-color: var(--border)">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: selectedProject.meta?.color ?? '#5e6ad2' }" />
+              <span class="text-sm font-semibold truncate" style="color: var(--text-1)">{{ selectedProject.title?.rendered ?? selectedProject.title }}</span>
+            </div>
+            <button @click="closeProject" class="p-1 rounded hover:bg-[var(--bg-hover)]" style="color: var(--text-3)">
+              <Icon name="lucide:x" class="w-4 h-4" />
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto">
+
+            <!-- URLs section -->
+            <div class="px-5 py-4 border-b" style="border-color: var(--border)">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-3)">Site URLs</span>
+                <button v-if="canCreate" @click="saveUrls" :disabled="urlSaving"
+                  class="text-xs px-3 py-1 rounded-lg text-white disabled:opacity-60"
+                  :style="urlSaved ? 'background: var(--success)' : 'background: var(--accent)'">
+                  {{ urlSaving ? 'Saving…' : urlSaved ? 'Saved!' : 'Save' }}
+                </button>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div v-for="field in [
+                  { key: 'live_url',       label: 'Live Site URL' },
+                  { key: 'live_admin_url', label: 'Live Admin URL' },
+                  { key: 'dev_url',        label: 'Dev URL' },
+                  { key: 'dev_admin_url',  label: 'Dev Admin URL' },
+                ]" :key="field.key">
+                  <label class="text-xs font-medium block mb-1" style="color: var(--text-2)">{{ field.label }}</label>
+                  <div v-if="canCreate" class="flex items-center gap-1.5">
+                    <input v-model="(urlForm as any)[field.key]" type="url" :placeholder="`https://`"
+                      class="flex-1 px-2.5 py-1.5 rounded-lg border text-xs outline-none focus:border-[var(--accent)]"
+                      style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+                    <a v-if="(urlForm as any)[field.key]" :href="(urlForm as any)[field.key]" target="_blank"
+                      class="p-1.5 rounded hover:bg-[var(--bg-hover)]" style="color: var(--accent)">
+                      <Icon name="lucide:external-link" class="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                  <div v-else>
+                    <a v-if="selectedProject.meta?.[field.key]"
+                      :href="selectedProject.meta[field.key]" target="_blank"
+                      class="text-xs hover:underline truncate block" style="color: var(--accent)">
+                      {{ selectedProject.meta[field.key] }}
+                    </a>
+                    <span v-else class="text-xs" style="color: var(--text-3)">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Related tickets -->
+            <div class="px-5 py-4">
+              <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-3)">
+                Related Tickets ({{ projectTickets.length }})
+              </span>
+
+              <div v-if="projectTickets.length === 0" class="mt-4 text-xs text-center py-6" style="color: var(--text-3)">
+                No tickets linked to this project.
+              </div>
+
+              <template v-else>
+                <!-- Column headers -->
+                <div class="grid mt-3 px-2 py-1.5 text-xs font-medium rounded"
+                  style="grid-template-columns: 16px 1fr 90px 70px 100px 100px; gap: 10px; color: var(--text-3); background: var(--bg-hover)">
+                  <span />
+                  <span>Title</span>
+                  <span>Status</span>
+                  <span>Priority</span>
+                  <span>Date Started</span>
+                  <span>Completed</span>
+                </div>
+
+                <div v-for="ticket in projectTickets" :key="ticket.id"
+                  class="grid items-center px-2 py-2 border-b text-xs"
+                  style="grid-template-columns: 16px 1fr 90px 70px 100px 100px; gap: 10px; border-color: var(--border)">
+                  <!-- Status icon -->
+                  <span class="status-icon shrink-0" :class="statusClass[statusSlug(ticket)]" />
+                  <!-- Title + ID -->
+                  <span class="truncate flex items-center gap-1">
+                    <span class="shrink-0 font-mono" style="color: var(--text-3)">#{{ ticket.id }}</span>
+                    <span style="color: var(--text-1)">{{ ticket.title?.rendered ?? ticket.title }}</span>
+                  </span>
+                  <!-- Status -->
+                  <span class="font-medium truncate" :style="{ color: statusColor[statusSlug(ticket)] ?? 'var(--text-3)' }">
+                    {{ statusName(ticket) }}
+                  </span>
+                  <!-- Priority -->
+                  <span class="font-medium truncate" :style="{ color: priorityColor[ticket['ticket-priority'] ? priorityTerms.find(p => p.id === ticket['ticket-priority']?.[0])?.slug ?? '' : ''] ?? 'var(--text-3)' }">
+                    {{ priorityName(ticket) }}
+                  </span>
+                  <!-- Date Started -->
+                  <span style="color: var(--text-2)">
+                    {{ ticket.meta?.date_started ? formatDate(ticket.meta.date_started) : formatDate(ticket.date) }}
+                  </span>
+                  <!-- Completed -->
+                  <span :style="{ color: ticket.meta?.date_completed ? '#2DB35D' : 'var(--text-3)' }">
+                    {{ ticket.meta?.date_completed ? formatDate(ticket.meta.date_completed) : (statusSlug(ticket) === 'done' ? formatDate(ticket.modified) : '—') }}
+                  </span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+    </Teleport>
 
     <!-- New Project modal -->
     <Teleport to="body">
