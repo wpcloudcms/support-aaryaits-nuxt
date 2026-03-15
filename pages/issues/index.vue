@@ -123,13 +123,13 @@ const priorityLabel: Record<string, string> = {
     </div>
 
     <!-- Column header -->
-    <div class="grid px-5 py-1.5 border-b text-xs font-medium shrink-0" style="grid-template-columns: 16px 1fr 110px 80px 110px 20px; gap: 12px; border-color: var(--border); color: var(--text-2)">
+    <div class="grid px-5 py-1.5 border-b text-xs font-medium shrink-0" style="grid-template-columns: 16px 1fr 110px 80px 110px 120px; gap: 12px; border-color: var(--border); color: var(--text-2)">
       <span />
       <span>Title</span>
       <span>Status</span>
       <span>Priority</span>
       <span>Project</span>
-      <span />
+      <span>Assigned</span>
     </div>
 
     <div class="flex-1 overflow-y-auto">
@@ -138,7 +138,7 @@ const priorityLabel: Record<string, string> = {
         v-for="ticket in tickets" :key="ticket.id"
         @click="selectedTicket = ticket; router.replace({ query: { ticket: ticket.id } })"
         class="grid items-center px-5 py-2.5 border-b text-sm hover:bg-[var(--bg-hover)] cursor-pointer"
-        style="grid-template-columns: 16px 1fr 110px 80px 110px 20px; gap: 12px; border-color: var(--border); color: var(--text-1)"
+        style="grid-template-columns: 16px 1fr 110px 80px 110px 120px; gap: 12px; border-color: var(--border); color: var(--text-1)"
       >
         <!-- Status icon -->
         <span class="status-icon shrink-0" :class="statusClass[statusSlug(ticket)]" />
@@ -163,13 +163,16 @@ const priorityLabel: Record<string, string> = {
           {{ ticket.meta_box?.project ? (projects.find((p: any) => String(p.id) === String(ticket.meta_box.project))?.title?.rendered ?? '—') : '—' }}
         </span>
 
-        <!-- Assigned member avatar -->
-        <div v-if="memberInitial(ticket)"
-          class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
-          style="background: var(--accent)" :title="memberName(ticket) ?? ''">
-          {{ memberInitial(ticket) }}
+        <!-- Assigned member -->
+        <div class="flex items-center gap-1.5 min-w-0">
+          <div v-if="memberInitial(ticket)"
+            class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+            style="background: var(--accent)">
+            {{ memberInitial(ticket) }}
+          </div>
+          <div v-else class="w-5 h-5 rounded-full border shrink-0" style="border-color: var(--border)" />
+          <span class="text-xs truncate" style="color: var(--text-2)">{{ memberName(ticket) ?? '—' }}</span>
         </div>
-        <div v-else class="w-5 h-5 rounded-full border" style="border-color: var(--border)" />
       </div>
       <div v-if="!loading && tickets.length === 0" class="p-8 text-center text-sm" style="color: var(--text-3)">No tickets yet.</div>
     </div>
