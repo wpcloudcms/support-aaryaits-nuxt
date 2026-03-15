@@ -250,7 +250,8 @@ html.dark {
               </div>
               <!-- Logo Upload -->
               <div>
-                <label class="text-xs font-medium block mb-1.5" style="color: var(--text-2)">Logo <span style="color: var(--text-3)">(max 100 × 80 px)</span></label>
+                <label class="text-xs font-medium block mb-1" style="color: var(--text-2)">Logo</label>
+                <p class="text-xs mb-1.5" style="color: var(--text-3)">It should be square and at least 512 by 512 pixels. This will also be set as the WordPress site icon.</p>
                 <div class="flex items-center gap-4">
                   <div class="w-24 h-16 rounded-lg border flex items-center justify-center overflow-hidden shrink-0"
                     style="border-color: var(--border); background: var(--bg-app)">
