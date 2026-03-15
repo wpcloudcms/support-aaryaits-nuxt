@@ -99,14 +99,14 @@ const statusLabel: Record<string, string> = {
   done: 'Done', cancelled: 'Cancelled',
 }
 const statusColor: Record<string, { bg: string; text: string }> = {
-  todo:        { bg: '#f0f0f0',  text: '#666' },
+  todo:        { bg: '#f0f0f0',  text: 'var(--text-2)' },
   'in-progress': { bg: '#fff3e0', text: '#e07b00' },
   'in-review': { bg: '#e8f0ff',  text: '#2563eb' },
   done:        { bg: '#e6f9ee',  text: '#2DB35D' },
   cancelled:   { bg: '#fdecea',  text: '#e53935' },
 }
 const priorityColor: Record<string, string> = {
-  urgent: '#ff5e5e', high: '#f0a100', medium: '#0091ff', low: '#888',
+  urgent: '#ff5e5e', high: '#f0a100', medium: '#0091ff', low: 'var(--text-2)',
 }
 const priorityLabel: Record<string, string> = {
   urgent: 'Urgent', high: 'High', medium: 'Medium', low: 'Low',
