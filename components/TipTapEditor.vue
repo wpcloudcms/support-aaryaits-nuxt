@@ -192,11 +192,11 @@ async function onImageFileChange(e: Event) {
     </div>
 
     <!-- Editor area -->
-    <div class="px-3 py-2.5" style="background: #ffffff">
+    <div class="px-3 py-2.5" style="background: var(--bg-card)">
       <EditorContent v-if="!htmlMode" :editor="editor" />
       <textarea v-else v-model="rawHtml"
         class="w-full outline-none resize-y font-mono text-xs min-h-[120px]"
-        style="background: #ffffff; color: #333; line-height: 1.6"
+        style="background: var(--bg-card); color: var(--text-1); line-height: 1.6"
         spellcheck="false" />
     </div>
 
