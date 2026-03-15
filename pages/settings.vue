@@ -164,7 +164,7 @@ html.dark {
               <div>
                 <p class="text-sm font-medium" style="color: var(--text-1)">{{ currentUser?.name ?? '—' }}</p>
                 <p class="text-xs mt-0.5" style="color: var(--text-2)">{{ currentUser?.email ?? '—' }}</p>
-                <p class="text-xs mt-0.5 capitalize" :style="{ color: roleColor[currentUser?.roles?.[0] ?? ''] ?? 'var(--text-3)' }">
+                <p v-if="isAdmin" class="text-xs mt-0.5 capitalize" :style="{ color: roleColor[currentUser?.roles?.[0] ?? ''] ?? 'var(--text-3)' }">
                   {{ currentUser?.roles?.[0] ?? '—' }}
                 </p>
               </div>
@@ -195,7 +195,7 @@ html.dark {
                   <p class="text-xs font-medium truncate" style="color: var(--text-1)">{{ m.name }}</p>
                   <p class="text-xs truncate" style="color: var(--text-3)">{{ m.slug }}</p>
                 </div>
-                <span class="text-xs capitalize px-2 py-0.5 rounded-full shrink-0"
+                <span v-if="isAdmin" class="text-xs capitalize px-2 py-0.5 rounded-full shrink-0"
                   :style="{ background: 'var(--bg-hover)', color: roleColor[m.roles?.[0]] ?? 'var(--text-2)' }">
                   {{ m.roles?.[0] ?? 'member' }}
                 </span>
