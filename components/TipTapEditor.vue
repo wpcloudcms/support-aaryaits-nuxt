@@ -36,6 +36,21 @@ watch(() => props.modelValue, (val) => {
 
 onBeforeUnmount(() => editor.value?.destroy())
 
+// ── HTML source mode ──────────────────────────────────────────
+const htmlMode = ref(false)
+const rawHtml = ref('')
+
+function toggleHtmlMode() {
+  if (!htmlMode.value) {
+    rawHtml.value = editor.value?.getHTML() ?? ''
+    htmlMode.value = true
+  } else {
+    editor.value?.commands.setContent(rawHtml.value, false)
+    emit('update:modelValue', rawHtml.value)
+    htmlMode.value = false
+  }
+}
+
 // ── Link dialog ───────────────────────────────────────────────
 const showLinkDialog = ref(false)
 const linkUrl = ref('')
@@ -169,11 +184,20 @@ async function onImageFileChange(e: Event) {
       <button type="button" @click="editor?.chain().focus().redo().run()"
         class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" style="color: var(--text-3)" title="Redo">
         <Icon name="lucide:redo-2" class="w-3.5 h-3.5" /></button>
+      <span class="w-px h-4 mx-1" style="background: var(--border)" />
+      <!-- HTML source toggle -->
+      <button type="button" @click="toggleHtmlMode"
+        :class="htmlMode ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
+        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs font-mono px-1.5 h-6 flex items-center justify-center" title="View/Edit HTML">&lt;/&gt;</button>
     </div>
 
     <!-- Editor area -->
     <div class="px-3 py-2.5" style="background: #ffffff">
-      <EditorContent :editor="editor" />
+      <EditorContent v-if="!htmlMode" :editor="editor" />
+      <textarea v-else v-model="rawHtml"
+        class="w-full outline-none resize-y font-mono text-xs min-h-[120px]"
+        style="background: #ffffff; color: #333; line-height: 1.6"
+        spellcheck="false" />
     </div>
 
     <!-- Link dialog -->
