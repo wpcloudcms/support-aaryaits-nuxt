@@ -14,7 +14,7 @@ const selectedTicket = ref<any>(null)
 const showForm = ref(false)
 const sortedStatusTerms = computed(() => [...statusTerms.value].sort((a, b) => ['backlog','todo','in-progress','in-review','done','cancelled'].indexOf(a.slug) - ['backlog','todo','in-progress','in-review','done','cancelled'].indexOf(b.slug)))
 const sortedPriorityTerms = computed(() => [...priorityTerms.value].sort((a, b) => ['urgent','high','medium','low'].indexOf(a.slug) - ['urgent','high','medium','low'].indexOf(b.slug)))
-const form = reactive({ title: '', status_id: 0, priority_id: 0, assigned_member: '', project: '' })
+const form = reactive({ title: '', description: '', status_id: 0, priority_id: 0, assigned_member: '', project: '' })
 
 const route = useRoute()
 const router = useRouter()
@@ -60,6 +60,7 @@ function prioritySlug(ticket: any) {
 async function submit() {
   await createTicket({
     title: form.title,
+    content: form.description,
     status: 'publish',
     meta_box: { assigned_member: form.assigned_member || '', project: form.project || '' },
     ...(form.status_id ? { 'ticket-status': [form.status_id] } : {}),
@@ -67,7 +68,7 @@ async function submit() {
   })
   allTickets.value = await getTickets() as any[]
   showForm.value = false
-  Object.assign(form, { title: '', status_id: sortedStatusTerms.value[0]?.id ?? 0, priority_id: sortedPriorityTerms.value[0]?.id ?? 0, assigned_member: '', project: '' })
+  Object.assign(form, { title: '', description: '', status_id: sortedStatusTerms.value[0]?.id ?? 0, priority_id: sortedPriorityTerms.value[0]?.id ?? 0, assigned_member: '', project: '' })
 }
 
 function onTicketUpdated(updated: any) {
@@ -182,12 +183,13 @@ const priorityColor: Record<string, string> = {
     <!-- New Ticket modal -->
     <Teleport to="body">
       <div v-if="showForm" class="fixed inset-0 flex items-center justify-center z-50" style="background: rgba(0,0,0,0.5)">
-        <div class="w-full max-w-md rounded-xl border p-6 space-y-4" style="background: var(--bg-card); border-color: var(--border)">
+        <div class="w-full max-w-lg rounded-xl border p-6 space-y-4" style="background: var(--bg-card); border-color: var(--border)">
           <h2 class="text-sm font-semibold" style="color: var(--text-1)">New Ticket</h2>
           <form @submit.prevent="submit" class="space-y-3">
             <input v-model="form.title" placeholder="Ticket title" required
               class="w-full px-3 py-2 rounded-lg border text-sm"
               style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+            <TipTapEditor v-model="form.description" placeholder="Add a description..." />
             <div class="flex gap-3">
               <select v-model.number="form.status_id" class="flex-1 px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
                 <option v-for="t in sortedStatusTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
