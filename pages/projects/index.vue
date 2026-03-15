@@ -2,6 +2,8 @@
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
 const { getProjects, createProject } = useWordPress()
+const { isAdmin, currentUser } = useAuth()
+const canCreate = computed(() => isAdmin.value || currentUser.value?.roles?.includes('editor'))
 const projects = ref<any[]>([])
 const showForm = ref(false)
 const form = reactive({ name: '', description: '', color: '#5e6ad2' })
@@ -28,7 +30,7 @@ const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
   <div class="flex flex-col h-full overflow-hidden">
     <div class="flex items-center justify-between h-12 px-5 border-b shrink-0" style="border-color: var(--border)">
       <h1 class="text-sm font-semibold" style="color: var(--text-1)">Projects</h1>
-      <button @click="showForm = true" class="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-white" style="background: var(--accent)">
+      <button v-if="canCreate" @click="showForm = true" class="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-white" style="background: var(--accent)">
         <Icon name="lucide:plus" class="w-3.5 h-3.5" /> New Project
       </button>
     </div>
