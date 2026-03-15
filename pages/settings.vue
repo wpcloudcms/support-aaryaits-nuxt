@@ -41,6 +41,12 @@ function onLogoChange(e: Event) {
   reader.readAsDataURL(file)
 }
 
+function setFavicon(url: string) {
+  let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
+  if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link) }
+  link.href = url
+}
+
 async function saveSiteIdentity() {
   logoSaving.value = true
   try {
@@ -48,6 +54,7 @@ async function saveSiteIdentity() {
       const res = await uploadSiteLogo(logoPreview.value)
       logoUrl.value = res.url
       logoPreview.value = ''
+      setFavicon(res.url)
     }
     const w = Math.max(200, Math.min(300, Number(editSidebarWidth.value)))
     await saveSiteSettings({ site_name: editSiteName.value, sidebar_width: w })

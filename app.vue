@@ -47,8 +47,20 @@ if (import.meta.client) {
     .then(s => { if (s) applyTheme(s) })
     .catch(() => {})
 
-  const { loadSiteSettings } = useSiteSettings()
-  loadSiteSettings()
+  const { loadSiteSettings, logoUrl } = useSiteSettings()
+  loadSiteSettings().then(() => {
+    if (logoUrl.value) setFavicon(logoUrl.value)
+  })
+}
+
+function setFavicon(url: string) {
+  let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'icon'
+    document.head.appendChild(link)
+  }
+  link.href = url
 }
 </script>
 
