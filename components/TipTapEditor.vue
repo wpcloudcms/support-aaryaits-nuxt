@@ -112,7 +112,10 @@ async function onImageFileChange(e: Event) {
       <span class="w-px h-4 mx-1" style="background: var(--border)" />
       <button type="button" @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
         :class="editor?.isActive('heading', { level: 2 }) ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
-        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs font-semibold w-6 h-6 flex items-center justify-center" title="Heading">H</button>
+        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs font-semibold w-7 h-6 flex items-center justify-center" title="Heading 2">H2</button>
+      <button type="button" @click="editor?.chain().focus().toggleHeading({ level: 3 }).run()"
+        :class="editor?.isActive('heading', { level: 3 }) ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
+        class="p-1 rounded hover:bg-[var(--bg-hover)] text-xs font-semibold w-7 h-6 flex items-center justify-center" title="Heading 3">H3</button>
       <button type="button" @click="editor?.chain().focus().toggleBulletList().run()"
         :class="editor?.isActive('bulletList') ? 'bg-[var(--bg-active)] text-[var(--accent)]' : 'text-[var(--text-2)]'"
         class="p-1 rounded hover:bg-[var(--bg-hover)] w-6 h-6 flex items-center justify-center" title="Bullet list">
@@ -205,6 +208,7 @@ async function onImageFileChange(e: Event) {
 }
 .tiptap-editor-content > * + * { margin-top: 0.5rem; }
 .tiptap-editor-content h2 { font-size: 1rem; font-weight: 600; color: var(--text-1); }
+.tiptap-editor-content h3 { font-size: 0.875rem; font-weight: 600; color: var(--text-1); }
 .tiptap-editor-content ul { list-style: disc; padding-left: 1.25rem; color: var(--text-1); }
 .tiptap-editor-content ol { list-style: decimal; padding-left: 1.25rem; color: var(--text-1); }
 .tiptap-editor-content blockquote { border-left: 3px solid var(--accent); padding-left: 0.75rem; color: var(--text-2); font-style: italic; }
