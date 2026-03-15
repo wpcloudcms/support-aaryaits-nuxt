@@ -172,7 +172,7 @@ function userInitial(name: string) {
               style="border-color: var(--border)">
               <!-- Comment notification -->
               <template v-if="n.type === 'comment'">
-                <div class="flex items-center gap-2 mb-1">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
                   <div class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                     style="background: var(--accent)">
                     {{ userInitial(n.user) }}
@@ -180,13 +180,16 @@ function userInitial(name: string) {
                   <span class="font-medium" style="color: var(--text-1)">{{ n.user }}</span>
                   <span style="color: var(--text-3)">commented on</span>
                   <span class="font-medium truncate" style="color: var(--accent)">{{ n.ticket_title }}</span>
+                  <NuxtLink :to="`/issues?ticket=${n.ticket_id}`" @click="showNotifPanel = false"
+                    class="shrink-0 px-1.5 py-0.5 rounded text-xs font-mono font-medium hover:opacity-80"
+                    style="background: var(--bg-hover); color: var(--text-2)">#{{ n.ticket_id }}</NuxtLink>
                 </div>
                 <p class="ml-7 line-clamp-2" style="color: var(--text-2)">{{ n.body }}</p>
               </template>
 
               <!-- History notification -->
               <template v-else>
-                <div class="flex items-center gap-2 mb-1">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
                   <div class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                     style="background: var(--accent)">
                     {{ userInitial(n.user) }}
@@ -194,6 +197,9 @@ function userInitial(name: string) {
                   <span class="font-medium" style="color: var(--text-1)">{{ n.user }}</span>
                   <span style="color: var(--text-3)">updated</span>
                   <span class="font-medium truncate" style="color: var(--accent)">{{ n.ticket_title }}</span>
+                  <NuxtLink :to="`/issues?ticket=${n.ticket_id}`" @click="showNotifPanel = false"
+                    class="shrink-0 px-1.5 py-0.5 rounded text-xs font-mono font-medium hover:opacity-80"
+                    style="background: var(--bg-hover); color: var(--text-2)">#{{ n.ticket_id }}</NuxtLink>
                 </div>
                 <ul class="ml-7 space-y-0.5">
                   <li v-for="(c, j) in n.changes" :key="j" style="color: var(--text-2)">· {{ c }}</li>
