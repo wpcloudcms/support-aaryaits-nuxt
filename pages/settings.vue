@@ -3,7 +3,7 @@ definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
 const { currentUser, isAdmin, logout } = useAuth()
 const { getUsers, getThemeSettings, saveThemeSettings, uploadSiteLogo, saveSiteSettings } = useWordPress()
-const { logoUrl, siteName, sidebarWidth, loadSiteSettings } = useSiteSettings()
+const { logoUrl, siteName, loginSubtitle, sidebarWidth, loadSiteSettings } = useSiteSettings()
 const members = ref<any[]>([])
 
 onMounted(async () => {
@@ -12,6 +12,7 @@ onMounted(async () => {
     await loadTheme()
     await loadSiteSettings()
     editSiteName.value = siteName.value
+    editLoginSubtitle.value = loginSubtitle.value
     editSidebarWidth.value = sidebarWidth.value
   }
 })
@@ -28,6 +29,7 @@ const wpAdminUrl = useRuntimeConfig().public.wpUrl
 
 // ── Site Identity (admin only) ────────────────────────────────
 const editSiteName = ref('Support Aaryaits')
+const editLoginSubtitle = ref('Sign in to your workspace')
 const editSidebarWidth = ref(200)
 const logoPreview = ref('')
 const logoSaving = ref(false)
@@ -57,8 +59,9 @@ async function saveSiteIdentity() {
       setFavicon(res.url)
     }
     const w = Math.max(200, Math.min(300, Number(editSidebarWidth.value)))
-    await saveSiteSettings({ site_name: editSiteName.value, sidebar_width: w })
+    await saveSiteSettings({ site_name: editSiteName.value, login_subtitle: editLoginSubtitle.value, sidebar_width: w })
     siteName.value = editSiteName.value
+    loginSubtitle.value = editLoginSubtitle.value
     sidebarWidth.value = w
     logoSaved.value = true
     setTimeout(() => logoSaved.value = false, 2500)
@@ -238,6 +241,12 @@ html.dark {
               <div>
                 <label class="text-xs font-medium block mb-1.5" style="color: var(--text-2)">Site Name</label>
                 <input v-model="editSiteName" type="text"
+                  class="w-full px-3 py-1.5 rounded-lg border text-sm outline-none focus:border-[var(--accent)]"
+                  style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
+              </div>
+              <div>
+                <label class="text-xs font-medium block mb-1.5" style="color: var(--text-2)">Login Subtitle</label>
+                <input v-model="editLoginSubtitle" type="text"
                   class="w-full px-3 py-1.5 rounded-lg border text-sm outline-none focus:border-[var(--accent)]"
                   style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)" />
               </div>

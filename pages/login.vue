@@ -2,7 +2,7 @@
 definePageMeta({ layout: false })
 
 const { login, isAuthenticated } = useAuth()
-const { logoUrl, siteName, loadSiteSettings } = useSiteSettings()
+const { logoUrl, siteName, loginSubtitle, loadSiteSettings } = useSiteSettings()
 const form = reactive({ username: '', password: '' })
 const error = ref('')
 const loading = ref(false)
@@ -34,7 +34,7 @@ async function submit() {
             style="max-width: 40px; max-height: 32px" />
           <span class="text-2xl font-bold" style="color: var(--text-1)">{{ siteName }}</span>
         </div>
-        <div class="text-sm" style="color: var(--text-2)">Sign in to your workspace</div>
+        <div class="text-sm" style="color: var(--text-2)">{{ loginSubtitle }}</div>
       </div>
 
       <form @submit.prevent="submit" class="space-y-4">
