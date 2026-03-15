@@ -117,7 +117,7 @@ const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
         style="background: var(--bg-card); border-color: var(--border)"
       >
         <div class="flex items-center gap-2 mb-2">
-          <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: p.meta?.color ?? '#5e6ad2' }" />
+          <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: p.meta?.color || '#5e6ad2' }" />
           <span class="font-medium text-sm truncate" style="color: var(--text-1)">{{ p.title?.rendered ?? p.title }}</span>
         </div>
         <p class="text-xs" style="color: var(--text-2)">{{ p.meta?.description || 'No description' }}</p>
@@ -134,7 +134,7 @@ const COLORS = ['#5e6ad2','#26c281','#f0a100','#ff5e5e','#0091ff','#a855f7']
           <!-- Header -->
           <div class="flex items-center justify-between px-5 h-12 border-b shrink-0" style="border-color: var(--border)">
             <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: selectedProject.meta?.color ?? '#5e6ad2' }" />
+              <span class="w-3 h-3 rounded-full shrink-0" :style="{ background: selectedProject.meta?.color || '#5e6ad2' }" />
               <span class="text-sm font-semibold truncate" style="color: var(--text-1)">{{ selectedProject.title?.rendered ?? selectedProject.title }}</span>
             </div>
             <button @click="closeProject" class="p-1 rounded hover:bg-[var(--bg-hover)]" style="color: var(--text-3)">
