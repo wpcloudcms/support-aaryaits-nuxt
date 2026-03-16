@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { currentUser, logout } = useAuth()
+const { currentUser, isAdmin, logout } = useAuth()
 const { logoUrl, siteName, sidebarWidth, loadSiteSettings } = useSiteSettings()
 const route = useRoute()
 const collapsed = ref(false)
@@ -88,8 +88,8 @@ function userInitial(name: string) {
         </NuxtLink>
       </nav>
 
-      <!-- Footer: Settings at bottom -->
-      <div class="px-1 pb-2 border-t pt-2 shrink-0" style="border-color: var(--border)">
+      <!-- Footer: Settings at bottom — Admins only -->
+      <div v-if="isAdmin" class="px-1 pb-2 border-t pt-2 shrink-0" style="border-color: var(--border)">
         <NuxtLink
           to="/settings"
           class="flex items-center gap-2.5 px-2 py-1.5 rounded text-xs font-medium transition-colors"
