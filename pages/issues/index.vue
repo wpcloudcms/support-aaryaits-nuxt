@@ -69,10 +69,10 @@ async function submit() {
   Object.assign(form, { title: '', description: '', status_id: sortedStatusTerms.value[0]?.id ?? 0, priority_id: sortedPriorityTerms.value[0]?.id ?? 0, assigned_member: '', project: '' })
 }
 
-function onTicketUpdated(updated: any) {
-  const idx = tickets.value.findIndex(t => t.id === updated.id)
-  if (idx !== -1) tickets.value[idx] = updated
-  selectedTicket.value = updated
+async function onTicketUpdated(updated: any) {
+  tickets.value = await getTickets() as any[]
+  const refreshed = tickets.value.find(t => t.id === updated.id)
+  if (refreshed) selectedTicket.value = refreshed
 }
 
 function memberInitial(ticket: any) {
@@ -145,7 +145,7 @@ const priorityLabel: Record<string, string> = {
         <!-- Title -->
         <span class="truncate flex items-center gap-1.5">
           <span class="shrink-0 text-xs font-mono" style="color: var(--text-3)">#{{ ticket.id }}</span>
-          {{ ticket.title }}
+          {{ typeof ticket.title === 'object' ? (ticket.title?.rendered ?? ticket.title?.raw) : ticket.title }}
         </span>
 
         <!-- Status column -->
