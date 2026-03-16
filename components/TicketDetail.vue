@@ -49,11 +49,11 @@ async function toggleTicketNotify() {
 
 watch(() => props.ticket, (t) => {
   if (!t) return
-  form.title = t.title?.rendered ?? t.title ?? ''
-  form.status_id = t['ticket-status']?.[0] ?? props.statusTerms[0]?.id ?? 0
-  form.priority_id = t['ticket-priority']?.[0] ?? props.priorityTerms[0]?.id ?? 0
-  form.assigned_member = t.meta_box?.assigned_member ?? ''
-  form.project = t.meta_box?.project ?? ''
+  form.title = t.title ?? ''
+  form.status_id = props.statusTerms.find(s => s.slug === t.status)?.id ?? props.statusTerms[0]?.id ?? 0
+  form.priority_id = props.priorityTerms.find(p => p.slug === t.priority)?.id ?? props.priorityTerms[0]?.id ?? 0
+  form.assigned_member = t.assignedMember ?? ''
+  form.project = t.projectId ?? ''
   form.content = t.content?.raw ?? t.content?.rendered ?? ''
   Object.assign(snapshot, {
     title: form.title, status_id: form.status_id, priority_id: form.priority_id,
@@ -85,12 +85,12 @@ function detectChanges() {
   const oldMember = props.members.find(m => String(m.id) === String(snapshot.assigned_member))
   const newMember = props.members.find(m => String(m.id) === String(form.assigned_member))
   if (form.assigned_member !== snapshot.assigned_member)
-    changes.push(`Assigned: ${oldMember ? (oldMember.title?.rendered ?? oldMember.title) : 'Unassigned'} → ${newMember ? (newMember.title?.rendered ?? newMember.title) : 'Unassigned'}`)
+    changes.push(`Assigned: ${oldMember ? oldMember.title : 'Unassigned'} → ${newMember ? newMember.title : 'Unassigned'}`)
 
   const oldProject = props.projects.find(p => String(p.id) === String(snapshot.project))
   const newProject = props.projects.find(p => String(p.id) === String(form.project))
   if (form.project !== snapshot.project)
-    changes.push(`Project: ${oldProject ? (oldProject.title?.rendered ?? oldProject.title) : 'None'} → ${newProject ? (newProject.title?.rendered ?? newProject.title) : 'None'}`)
+    changes.push(`Project: ${oldProject ? oldProject.title : 'None'} → ${newProject ? newProject.title : 'None'}`)
 
   return changes
 }
@@ -256,7 +256,7 @@ function userInitial(name: string) {
           style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
           <option value="">Unassigned</option>
           <option v-for="m in members" :key="m.id" :value="String(m.id)">
-            {{ m.title?.rendered ?? m.title }}
+            {{ m.title }}
           </option>
         </select>
       </div>
@@ -268,7 +268,7 @@ function userInitial(name: string) {
           style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
           <option value="">No project</option>
           <option v-for="p in projects" :key="p.id" :value="String(p.id)">
-            {{ p.title?.rendered ?? p.title }}
+            {{ p.title }}
           </option>
         </select>
       </div>

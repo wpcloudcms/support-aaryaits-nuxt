@@ -14,7 +14,8 @@ export default defineNuxtConfig({
   // Runtime config — public values safe for browser
   runtimeConfig: {
     public: {
-      wpUrl: process.env.NUXT_PUBLIC_WP_URL || 'https://your-wordpress.com',
+      wpUrl:  process.env.NUXT_PUBLIC_WP_URL  || 'https://your-wordpress.com',
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'https://aaryaits-api.wpcloudcms.workers.dev',
     },
   },
 

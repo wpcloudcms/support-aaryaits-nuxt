@@ -16,7 +16,7 @@ const COLUMNS = [
 ]
 
 function byStatus(status: string) {
-  return issues.value.filter(i => (i.meta?.status ?? 'todo') === status)
+  return issues.value.filter(i => (i.status ?? 'todo') === status)
 }
 </script>
 
@@ -41,7 +41,7 @@ function byStatus(status: string) {
           class="p-3 rounded-lg border text-xs cursor-pointer hover:border-[var(--accent)]"
           style="background: var(--bg-card); border-color: var(--border); color: var(--text-1)"
         >
-          {{ issue.title?.rendered ?? issue.title }}
+          {{ issue.title }}
         </div>
         <div v-if="byStatus(col.key).length === 0" class="text-xs text-center py-4" style="color: var(--text-3)">Empty</div>
       </div>

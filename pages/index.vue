@@ -22,10 +22,10 @@ const router = useRouter()
 // Filter tickets assigned to the current logged-in member
 const tickets = computed(() => {
   const myMember = members.value.find(m =>
-    (m.title?.rendered ?? m.title ?? '').trim() === (currentUser.value?.name ?? '').trim()
+    (m.title ?? '').trim() === (currentUser.value?.name ?? '').trim()
   )
   if (!myMember) return []
-  return allTickets.value.filter(t => String(t.meta_box?.assigned_member) === String(myMember.id))
+  return allTickets.value.filter(t => String(t.assignedMember) === String(myMember.id))
 })
 
 onMounted(async () => {
@@ -49,12 +49,10 @@ onMounted(async () => {
 })
 
 function statusSlug(ticket: any) {
-  const id = ticket['ticket-status']?.[0]
-  return statusTerms.value.find(t => t.id === id)?.slug ?? ''
+  return ticket.status ?? ''
 }
 function prioritySlug(ticket: any) {
-  const id = ticket['ticket-priority']?.[0]
-  return priorityTerms.value.find(t => t.id === id)?.slug ?? ''
+  return ticket.priority ?? ''
 }
 
 async function submit() {
@@ -78,17 +76,17 @@ function onTicketUpdated(updated: any) {
 }
 
 function memberInitial(ticket: any) {
-  const id = ticket.meta_box?.assigned_member
+  const id = ticket.assignedMember
   if (!id) return null
   const m = members.value.find(m => String(m.id) === String(id))
-  return m ? (m.title?.rendered ?? m.title ?? '?')[0].toUpperCase() : null
+  return m ? (m.title ?? '?')[0].toUpperCase() : null
 }
 
 function memberName(ticket: any) {
-  const id = ticket.meta_box?.assigned_member
+  const id = ticket.assignedMember
   if (!id) return null
   const m = members.value.find(m => String(m.id) === String(id))
-  return m ? (m.title?.rendered ?? m.title) : null
+  return m ? m.title : null
 }
 
 const statusClass: Record<string, string> = {
@@ -138,7 +136,7 @@ const priorityColor: Record<string, string> = {
         <span class="status-icon shrink-0" :class="statusClass[statusSlug(ticket)]" />
         <span class="truncate flex items-center gap-1.5">
           <span class="shrink-0 text-xs font-mono" style="color: var(--text-3)">#{{ ticket.id }}</span>
-          {{ ticket.title?.rendered ?? ticket.title }}
+          {{ ticket.title }}
         </span>
         <span class="text-xs font-medium truncate"
           :style="{ color: statusColor[statusSlug(ticket)]?.text ?? 'var(--text-3)' }">
@@ -149,7 +147,7 @@ const priorityColor: Record<string, string> = {
           {{ priorityTerms.find(t => t.slug === prioritySlug(ticket))?.name ?? '—' }}
         </span>
         <span class="text-xs truncate" style="color: var(--accent)">
-          {{ ticket.meta_box?.project ? (projects.find((p: any) => String(p.id) === String(ticket.meta_box.project))?.title?.rendered ?? '—') : '—' }}
+          {{ ticket.projectId ? (projects.find((p: any) => String(p.id) === String(ticket.projectId))?.title ?? '—') : '—' }}
         </span>
         <div class="flex items-center gap-1.5 min-w-0">
           <div v-if="memberInitial(ticket)"
@@ -200,11 +198,11 @@ const priorityColor: Record<string, string> = {
             </div>
             <select v-model="form.assigned_member" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
               <option value="">Unassigned</option>
-              <option v-for="m in members" :key="m.id" :value="String(m.id)">{{ m.title?.rendered ?? m.title }}</option>
+              <option v-for="m in members" :key="m.id" :value="String(m.id)">{{ m.title }}</option>
             </select>
             <select v-model="form.project" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--bg-app); border-color: var(--border); color: var(--text-1)">
               <option value="">No project</option>
-              <option v-for="p in projects" :key="p.id" :value="String(p.id)">{{ p.title?.rendered ?? p.title }}</option>
+              <option v-for="p in projects" :key="p.id" :value="String(p.id)">{{ p.title }}</option>
             </select>
             <div class="flex justify-end gap-2 pt-1">
               <button type="button" @click="showForm = false" class="px-4 py-1.5 rounded-lg border text-xs" style="border-color: var(--border); color: var(--text-2)">Cancel</button>
