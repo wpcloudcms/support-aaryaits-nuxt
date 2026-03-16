@@ -110,10 +110,10 @@ export function useWordPress() {
   const saveThemeSettings = (settings: Record<string, string>) =>
     wpFetch<{ ok: boolean; settings: Record<string, string> }>('/wp-json/support/v1/theme-settings', { method: 'POST', body: JSON.stringify(settings) })
 
-  // ── SITE SETTINGS — Node.js API (reads wp_options directly) ─
-  const getSiteSettings  = () => apiFetch<Record<string, string>>('/api/settings')
+  // ── SITE SETTINGS — WP REST (support_site_settings option) ──
+  const getSiteSettings  = () => wpFetch<Record<string, string>>('/wp-json/support/v1/site-settings')
   const saveSiteSettings = (settings: Record<string, string>) =>
-    apiFetch<{ ok: boolean }>('/api/settings', { method: 'POST', body: JSON.stringify(settings) })
+    wpFetch<{ ok: boolean }>('/wp-json/support/v1/site-settings', { method: 'POST', body: JSON.stringify(settings) })
 
   // ── UPLOAD — Node.js API (R2 via Workers binding) ──────────
   const uploadImage = async (data: string, folder = 'uploads'): Promise<{ ok: boolean; url: string }> => {
