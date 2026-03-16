@@ -25,7 +25,7 @@ const logoSaving = ref(false)
 onMounted(async () => {
   ;[projects.value, allTickets.value, statusTerms.value, priorityTerms.value] = await Promise.all([
     getProjects() as Promise<any[]>,
-    getTickets('context=edit') as Promise<any[]>,
+    getTickets() as Promise<any[]>,
     getStatusTerms() as Promise<any[]>,
     getPriorityTerms() as Promise<any[]>,
   ])
@@ -90,20 +90,17 @@ function onNewLogoChange(e: Event) {
 
 const projectTickets = computed(() => {
   if (!selectedProject.value) return []
-  return allTickets.value.filter(t => String(t.meta_box?.project) === String(selectedProject.value.id))
+  return allTickets.value.filter(t => String(t.projectId) === String(selectedProject.value.id))
 })
 
 function statusSlug(ticket: any) {
-  const id = ticket['ticket-status']?.[0]
-  return statusTerms.value.find(t => t.id === id)?.slug ?? ''
+  return ticket.status ?? ''
 }
 function statusName(ticket: any) {
-  const id = ticket['ticket-status']?.[0]
-  return statusTerms.value.find(t => t.id === id)?.name ?? '—'
+  return statusTerms.value.find(t => t.slug === ticket.status)?.name ?? '—'
 }
 function priorityName(ticket: any) {
-  const id = ticket['ticket-priority']?.[0]
-  return priorityTerms.value.find(t => t.id === id)?.name ?? '—'
+  return priorityTerms.value.find(t => t.slug === ticket.priority)?.name ?? '—'
 }
 function formatDate(d: string) {
   if (!d) return '—'
@@ -161,7 +158,7 @@ async function submit() {
             <img v-if="p.meta?.logo" :src="p.meta.logo" class="w-full h-full object-contain" />
             <Icon v-else name="lucide:folder" class="w-4 h-4" style="color: var(--text-3)" />
           </div>
-          <span class="font-medium text-sm truncate" style="color: var(--text-1)">{{ p.title?.rendered ?? p.title }}</span>
+          <span class="font-medium text-sm truncate" style="color: var(--text-1)">{{ p.title }}</span>
         </div>
         <p class="text-xs" style="color: var(--text-2)">{{ p.meta?.description || 'No description' }}</p>
       </div>
@@ -182,7 +179,7 @@ async function submit() {
                 <img v-if="logoPreview || selectedProject.meta?.logo" :src="logoPreview || selectedProject.meta.logo" class="w-full h-full object-contain" />
                 <Icon v-else name="lucide:folder" class="w-4 h-4" style="color: var(--text-3)" />
               </div>
-              <span class="text-sm font-semibold truncate" style="color: var(--text-1)">{{ selectedProject.title?.rendered ?? selectedProject.title }}</span>
+              <span class="text-sm font-semibold truncate" style="color: var(--text-1)">{{ selectedProject.title }}</span>
             </div>
             <button @click="closeProject" class="p-1 rounded hover:bg-[var(--bg-hover)]" style="color: var(--text-3)">
               <Icon name="lucide:x" class="w-4 h-4" />
@@ -281,23 +278,23 @@ async function submit() {
                   <!-- Title + ID -->
                   <span class="truncate flex items-center gap-1">
                     <span class="shrink-0 font-mono" style="color: var(--text-3)">#{{ ticket.id }}</span>
-                    <span style="color: var(--text-1)">{{ ticket.title?.rendered ?? ticket.title }}</span>
+                    <span style="color: var(--text-1)">{{ ticket.title }}</span>
                   </span>
                   <!-- Status -->
                   <span class="font-medium truncate" :style="{ color: statusColor[statusSlug(ticket)] ?? 'var(--text-3)' }">
                     {{ statusName(ticket) }}
                   </span>
                   <!-- Priority -->
-                  <span class="font-medium truncate" :style="{ color: priorityColor[ticket['ticket-priority'] ? priorityTerms.find(p => p.id === ticket['ticket-priority']?.[0])?.slug ?? '' : ''] ?? 'var(--text-3)' }">
+                  <span class="font-medium truncate" :style="{ color: priorityColor[ticket.priority ?? ''] ?? 'var(--text-3)' }">
                     {{ priorityName(ticket) }}
                   </span>
                   <!-- Date Started -->
                   <span style="color: var(--text-2)">
-                    {{ ticket.meta?.date_started ? formatDate(ticket.meta.date_started) : formatDate(ticket.date) }}
+                    {{ ticket.dateStarted ? formatDate(ticket.dateStarted) : formatDate(ticket.date) }}
                   </span>
                   <!-- Completed -->
-                  <span :style="{ color: ticket.meta?.date_completed ? '#2DB35D' : 'var(--text-3)' }">
-                    {{ ticket.meta?.date_completed ? formatDate(ticket.meta.date_completed) : (statusSlug(ticket) === 'done' ? formatDate(ticket.modified) : '—') }}
+                  <span :style="{ color: ticket.dateCompleted ? '#2DB35D' : 'var(--text-3)' }">
+                    {{ ticket.dateCompleted ? formatDate(ticket.dateCompleted) : (statusSlug(ticket) === 'done' ? formatDate(ticket.modified) : '—') }}
                   </span>
                 </div>
               </template>
