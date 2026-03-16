@@ -14,7 +14,6 @@ function toggleDark() {
 const navItems = [
   { label: 'My Tickets',  icon: 'lucide:user',             to: '/' },
   { label: 'All Tickets', icon: 'lucide:ticket',           to: '/issues' },
-  { label: 'Board',       icon: 'lucide:layout-dashboard', to: '/board' },
   { label: 'Projects',    icon: 'lucide:folder',           to: '/projects' },
   { label: 'Customers',   icon: 'lucide:building-2',       to: '/customers' },
   { label: 'Members',     icon: 'lucide:users',            to: '/members' },
